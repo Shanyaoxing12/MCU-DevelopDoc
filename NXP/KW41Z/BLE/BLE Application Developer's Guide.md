@@ -129,6 +129,7 @@ extern void App_NvmRead
 ```
 
 设备信息被划分成几个部件，以确保软件磨损均衡机制也能得到最优的使用。部件大小是固定的（在 **ble_constant.h** 中定义），并且具有以下含义：
+
 | API pointer to bond component                                        | Component size (ble_constants.h) | Description                                                                  |
 | :------------------------------------------------------------------- | :------------------------------- | :--------------------------------------------------------------------------- |
 | pBondHeader: points to a bleBondIdentityHeaderBlob_t element         | gBleBondIdentityHeaderSize_c     | Bonding information which is sufficient to identify a bonded device          |
