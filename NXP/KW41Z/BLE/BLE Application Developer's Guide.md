@@ -1,6 +1,6 @@
 # **Bluetooth® Low Energy Application Developer’s Guide**
 
-- [**Bluetooth® Low Energy Application Developer’s Guide**](#bluetooth%C2%AE-low-energy-application-developer%E2%80%99s-guide)
+- [**Bluetooth® Low Energy Application Developer’s Guide**](#bluetooth%C2%AE-low-energy-application-developers-guide)
 - [1. 前言](#1-%E5%89%8D%E8%A8%80)
 - [2. 先决条件](#2-%E5%85%88%E5%86%B3%E6%9D%A1%E4%BB%B6)
     - [2.1 RTOS任务队列和事件](#21-rtos%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6)
@@ -13,6 +13,11 @@
     - [3.4 主机栈库和API可用性](#34-%E4%B8%BB%E6%9C%BA%E6%A0%88%E5%BA%93%E5%92%8Capi%E5%8F%AF%E7%94%A8%E6%80%A7)
     - [3.5 同步和异步函数](#35-%E5%90%8C%E6%AD%A5%E5%92%8C%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0)
     - [3.6 无线发射功率级别](#36-%E6%97%A0%E7%BA%BF%E5%8F%91%E5%B0%84%E5%8A%9F%E7%8E%87%E7%BA%A7%E5%88%AB)
+- [4. 通用访问配置文件(GAP)层](#4-%E9%80%9A%E7%94%A8%E8%AE%BF%E9%97%AE%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6gap%E5%B1%82)
+    - [4.1 中央设置](#41-%E4%B8%AD%E5%A4%AE%E8%AE%BE%E7%BD%AE)
+        - [4.1.1 扫描](#411-%E6%89%AB%E6%8F%8F)
+        - [4.1.2 发起和关闭连接](#412-%E5%8F%91%E8%B5%B7%E5%92%8C%E5%85%B3%E9%97%AD%E8%BF%9E%E6%8E%A5)
+        - [4.1.3 配对和绑定](#413-%E9%85%8D%E5%AF%B9%E5%92%8C%E7%BB%91%E5%AE%9A)
 
 
 # 1. 前言
@@ -21,7 +26,7 @@
 
 该文档还列出了BLE主机栈的先决条件和初始化，然后按照层和应用程序角色分组表示API，如下所述。
 
-首先，通用访问配置文件（GAP）层根据设备的GAP角色分为两个部分：中央和外围设备。
+首先，通用访问配置文件（GAP）层根据设备的GAP角色分为两个部分：中央和外设。
 
 通过代码示例解释了这两种设备的基本设置，例如如何准备设备以进行连接、如何将它们连接在一起以及配对和绑定过程。
 
@@ -196,7 +201,7 @@ hostToControllerInterface 是主机栈的HCI出口点。这是主机每次尝试
 
 在接收到该事件之后，可以启动主应用程序逻辑。
 
-![BLE Host Stack overview](../Pic/BLE%20Application%20Developer's%20Guide-Figure1.jpg)
+![Figure 1. BLE Host Stack overview](../Pic/BLE%20Application%20Developer's%20Guide-Figure1.jpg)
 
 ## 3.3 HCI出入点
 
@@ -216,14 +221,14 @@ void Ble_HciRecv
 
 ## 3.4 主机栈库和API可用性
 
-本文档中引用的所有API均可在中央和外围设备库中获得。例如，**ble_host_lib.a** 是一个功能齐全的库，完整地支持GAP级别的中央和外围设备API，以及GATT级别的客户端和服务器API。
+本文档中引用的所有API均可在中央和外设库中获得。例如，**ble_host_lib.a** 是一个功能齐全的库，完整地支持GAP级别的中央和外设API，以及GATT级别的客户端和服务器API。
 
 但是，某些应用程序可能针对内存受限的设备，并不需要完整的支持。为了减少代码大小和RAM利用率，还提供了另外两个库：
 * **ble_host_peripheral_lib.a**
-    * 只支持用于GAP外围设备和GAP广播者角色的API
+    * 只支持用于GAP外设和GAP广播者角色的API
     * 只支持用于GATT服务器角色的API
 * **ble_host_peripheral_lib.a**
-    * 只支持用于GAP中央和GAP订阅者角色的API
+    * 只支持用于GAP中央和GAP观察者角色的API
     * 只支持用于GATT客户端角色的API
 
 若果尝试使用其不支持的API（例如，使用 **ble_host_peripheral_lib.a** 调用 Gap_Connect），API会返回 gBleFeatureNotSupported_c 错误代码。
@@ -258,4 +263,305 @@ Controller_SetTxPowerLevel(level,gConnTxChannel_c)
 数字功率级别均匀分布在最小和最大输出功率值之间（以dBm表示）。更多信息请参考 **silicon datasheet**。
 
 ------------------------------------------------------------------------------------------------------------------------
+
+# 4. 通用访问配置文件(GAP)层
+
+GAP层管理连接，安全性和绑定设备。
+
+GAP层API构建在主机控制器接口（HCI）、安全管理器协议（SMP）和设备数据库之上。
+
+GAP定义了BLE设备在BLE系统中可能具有的四种角色（见 4.1.3 节的 Table 1. GAP Security Modes and Levels）：
+* 中央
+    * 扫描广告者（外设和广播者）
+    * 发起与外设的连接；在链路层（LL）级别为Master
+    * 通常充当GATT客户端，但其本身也可以包含GATT数据库
+* 外设
+    * 广告和接受来自中央的连接请求；在链路层（LL）级别为Slave
+    * 通常包含GATT数据库并充当GATT服务器，但也可能是客户端
+* 观察者
+    * 扫描广告者，但不发起连接；传输是可选的
+* 广播者
+    * 广告，但不接受来自中央的连接请求；接收是可选的
+
+![Figure 2. GAP Topology](../Pic/BLE%20Application%20Developer's%20Guide-Figure2.jpg)
+
+## 4.1 中央设置
+
+通常，中央必须开始扫描以查找外设。当中央扫描了它想要连接的外设时，它会停止扫描并发起与该外设的连接。建立连接后，如果外设需要，它可以进行配对，或者如果两个设备在过去已经绑定，则可以直接加密链路。
+
+### 4.1.1 扫描
+
+中央设备的最基本设置从扫描开始，由 **gap_interface.h** 中的以下函数执行：
+```c
+bleResult_t Gap_StartScanning
+(
+    gapScanningParameters_t * pScanningParameters,
+    gapScanningCallback_t scanningCallback
+);
+```
+
+如果 pScanningParameters 指针为NULL，则使用当前设置的参数。如果在设备上电后未设置任何参数，则使用标准默认值：
+```c
+#define gGapDefaultScanningParameters_d \
+{ \
+    /* type */              gGapScanTypePassive_c, \
+    /* interval */          gGapScanIntervalDefault_d, \
+    /* window */            gGapScanWindowDefault_d, \
+    /* ownAddressType */    gBleAddrTypePublic_c, \
+    /* filterPolicy */      gScanAll_c \
+}
+```
+
+定义非默认扫描参数的最简单方法是使用上述默认值初始化 gapScanningParameters_t 结构，并只更改所需的字段。
+
+例如，要执行主动扫描并仅扫描白名单中的设备，可以使用以下代码：
+```c
+gapScanningParameters_t scanningParameters = gGapDefaultScanningParameters_d;
+scanningParameters.type = gGapScanTypeActive_c;
+scanningParameters.filterPolicy = gScanWhiteListOnly_c;
+Gap_StartScanning(&scanningParameters, scanningCallback);
+```
+
+scanningCallback 通过GAP层与扫描有关的信号事件触发。
+
+最重要的事件是 gDeviceScanned_c 事件，每次扫描到广告设备时都会触发该事件。此事件的数据包含有关广告者的信息：
+```c
+typedefstruct gapScannedDevice_tag {
+    bleAddressType_t                 addressType;
+    bleDeviceAddress_t               aAddress;
+    int8_t                           rssi;
+    uint8_t                          dataLength;
+    uint8_t *                        data;
+    bleAdvertisingReportEventType_t  advEventType;
+} gapScannedDevice_t;
+```
+
+如果此信息表示为中央想要连接的已知外设，则后者必须停止扫描和连接到该外设。
+
+要停止扫描，请调用此函数：
+```c
+bleResult_t Gap_StopScanning (void);
+```
+
+默认情况下，GAP层配置为使用 gDeviceScanned_c 事件类型将所有已扫描到的设备报告给应用程序。但是，某些用例可能需要执行特定的GAP发现程序，其中广告报告必须通过广告数据中的 Flags AD 值进行过滤。其他用例要求主机栈在扫描特定设备时自动发起连接。
+
+要启用基于 Flags AD 值的过滤或设置自动连接的设备地址，必须在扫描开始之前调用以下函数：
+```c
+bleResult_tGap_SetScanMode
+(
+    gapScanMode_t scanMode,
+    gapAutoConnectParams_t* pAutoConnectParams
+);
+```
+
+扫描模式的默认值为 gNoDiscovery_c，它会报告所有数据包，而不管其内容如何，​​并且不执行任何自动连接。
+
+要启用有限发现，必须使用 gLimitedDiscovery_c 值，而 gGeneralDiscovery_c 值激活通用发现。
+
+要在扫描特定设备时启用自动连接，必须设置 gAutoConnect_c 值，在这种情况下，pAutoConnectParams 参数必须指向保存目标设备地址的结构以及主机用于这些设备的连接参数。
+
+### 4.1.2 发起和关闭连接
+
+要连接到已扫描的外设，请从 gDeviceScanned_c 事件数据中提取其地址和地址类型，停止扫描并调用以下函数：
+```c
+bleResult_t Gap_Connect
+(
+    gapConnectionRequestParameters_t * pParameters,
+    gapConnectionCallback_t connCallback
+);
+```
+
+创建连接参数结构的简单方法是使用默认值初始化它，然后仅更改需要的字段。默认结构定义如下：
+```c
+#define gGapDefaultConnectionRequestParameters_d \
+{ \
+    /* scanInterval */          gGapScanIntervalDefault_d, \
+    /* scanWindow */            gGapScanWindowDefault_d, \
+    /* filterPolicy */          gUseDeviceAddress_c, \
+    /* ownAddressType */        gBleAddrTypePublic_c, \
+    /* peerAddressType */       gBleAddrTypePublic_c, \
+    /* peerAddress */           { 0, 0, 0, 0, 0, 0 }, \
+    /* connIntervalMin */       gGapDefaultMinConnectionInterval_d, \
+    /* connIntervalMax */       gGapDefaultMaxConnectionInterval_d, \
+    /* connLatency */           gGapDefaultConnectionLatency_d, \
+    /* supervisionTimeout */    gGapDefaultSupervisionTimeout_d, \
+    /* connEventLengthMin */    gGapConnEventLengthMin_d, \
+    /* connEventLengthMax */    gGapConnEventLengthMax_d \
+}
+```
+
+在以下示例中，中央扫描一个具有已知地址的特定心率传感器。当它找到它时，它立即连接到它。
+```c
+static bleDeviceAddress_t heartRateSensorAddress = { 0xa1, 0xb2, 0xc3, 0xd4, 0xe5, 0xf6 };
+static bleAddressType_t hrsAddressType = gBleAddrTypePublic_c;
+static bleAddressType_t ownAddressType = gBleAddrTypePublic_c;
+voidgapScanningCallback( gapScanningEvent_t * pScanningEvent)
+{
+    switch (pScanningEvent-> eventType )
+    {
+        /* ... */
+        casegDeviceScanned_c:
+        {
+            if (hrsAddressType == pScanningEvent -> eventData.scannedDevice.addressType && 
+                Ble_DeviceAddressesMatch(heartRateSensorAddress, pScanningEvent-> eventData.scannedDevice.aAddress ))
+            {
+                gapConnectionRequestParameters_t connReqParams = gGapDefaultConnectionRequestParameters_d; 
+                connReqParams.peerAddressType = hrsAddressType;
+                Ble_CopyDeviceAddress(connReqParams.peerAddress , heartRateSensorAddress); 
+                connReqParams.ownAddressType = ownAddressType;
+                bleResult_t result = Gap_StopScanning();
+                if (gBleSuccess_c != result)
+                {
+                    /* Handle error */
+                }
+                else
+                {
+                    /* There is no need to wait for the gScanStateChanged_c event because
+                     * the commands are queued in the host task
+                     * and executed consecutively. */
+                    result = Gap_Connect(&connReqParams, connectionCallback);
+                    if (gBleSuccess_c != result)
+                    {
+                        /* Handle error */
+                    }
+                }
+            }
+            break;
+        }
+        /* ... */
+    }
+}
+```
+
+connCallback 由GAP触发，以发送与活动连接相关的所有事件。它有以下原型：
+```c
+typedef void (* gapConnectionCallback_t )
+(
+    deviceId_t deviceId,
+    gapConnectionEvent_t * pConnectionEvent
+);
+```
+
+在这个回调中应该监听的第一个事件是 gConnEvtConnected_c 事件。如果应用程序决定在产生此事件之前删除连接建立，它应该调用以下宏：
+```c
+#define Gap_CancelInitiatingConnection()\
+    Gap_Disconnect(gCancelOngoingInitiatingConnection_d)
+```
+
+这是非常有用的，例如，当应用程序选择对连接请求使用限时计时器时。
+
+在接收到 gConnEvtConnected_c 事件时，应用程序可以继续从事件数据（pConnectionEvent->event.connectedEvent）中提取必要的参数。要保存的最重要的参数是 deviceId。
+
+deviceId 是一个唯一的8位无符号整数，用于识别后续GAP和GATT的API调用的活动连接。与某个连接相关的所有功能都需要deviceId 参数。例如，要断开连接，请调用此函数：
+```c
+bleResult_t Gap_Disconnect
+(
+    deviceId_t deviceId
+);
+```
+
+### 4.1.3 配对和绑定
+
+用户连接到外设后，使用以下功能检查此设备过去是否已绑定：
+```c
+bleResult_t Gap_CheckIfBonded
+(
+    deviceId_t deviceId,
+    bool_t * pOutIsBonded
+);
+```
+
+如果有，可以通过以下方式请求链路加密：
+```c
+bleResult_t Gap_EncryptLink
+(
+    deviceId_t deviceId,
+);
+```
+
+如果链路加密成功，则会触发 gConnEvtEncryptionChanged_c 连接事件。否则，将收到 gConnEvtAuthenticationRejected_c 事件，并将 rejectReason 事件数据参数设置为 gLinkEncryptionFailed_c。
+
+另一方面，如果这是一个新设备（未绑定），可以启动配对，如下所示：
+```c
+bleResult_t Gap_Pair
+(
+    deviceId_t deviceId,
+    gapPairingParameters_t * pPairingParameters
+);
+```
+
+配对参数如下所示：
+```c
+typedef struct gapPairingParameters_tag {
+    bool_t                       withBonding;
+    gapSecurityModeAndLevel_t    securityModeAndLevel;
+    uint8_t                      maxEncryptionKeySize;
+    gapIoCapabilities_t          localIoCapabilities;
+    bool_t                       oobAvailable;
+    gapSmpKeyFlags_t             centralKeys;
+    gapSmpKeyFlags_t             peripheralKeys;
+    bool_t                       leSecureConnectionSupported;
+    bool_t                       useKeypressNotifications;
+} gapPairingParameters_t;
+```
+
+参数的名称是自解释的。如果中央想要绑定，那么 withBonding 标志应设置为TRUE。
+
+对于安全模式和级别，GAP层将其定义如下：（M代表安全模式，L代表级别）
+* M1L1 代表无安全要求
+* 除了 M1L1，其他 M1 需要加密，而 M2 需要数据签名
+* M1L2 和 M2L1 不需要身份验证（它们允许仅工作配对，没有MITM保护），而 M1L3 和 M2L2 需要身份验证（必须使用PIN或OOB数据配对，以提供MITM保护）
+* 从蓝牙规范4.2开始，OOB配对仅在某些条件下提供MITM保护。如果OOB数据交换功能通过专用API提供MITM保护，则应用程序必须通知栈
+* M1L4 保留给使用LE安全连接配对方法进行身份验证的配对（带有MITM保护）
+* 如果使用LE安全连接配对方法但它不提供MITM保护，则配对将以 M1L2 完成。
+
+> PS：仅工作 - 仅工作（Just Works）方式主要针对没有输入方式的设备。
+
+> PS：MITM - 在密码学和计算机安全领域中，中间人攻击（英语：Man-in-the-middle attack，缩写：MITM）是指攻击者与通讯的两端分别创建独立的联系，并交换其所收到的数据，使通讯的两端认为他们正在通过一个私密的连接与对方直接对话，但事实上整个会话都被攻击者完全控制。在中间人攻击中，攻击者可以拦截通讯双方的通话并插入新的内容。
+
+> PS：OOB数据 - 在计算机网络中，带外数据（out-of-band data）是通过独立于主带内数据流的流传输的数据。带外数据机制提供概念上独立的信道，允许通过该机制发送的任何数据与带内数据分开。应该提供带外数据机制作为数据信道和传输协议的固有特性，而不是要求建立单独的信道和端点。
+
+![Table 1. GAP Security Modes and Levels](../Pic/BLE%20Application%20Developer's%20Guide-Table1.jpg)
+
+centralKeys 应该为应用程序中可用的所有密钥设置标志。如果中央使用私有解析地址，则IRK是强制性的，而如果中央想要使用数据签名，则必须使用CSRK。LTK是由外设提供的，只有当中央打算在未来的重新连接（GAP角色更改）中成为外设时才应包括LTK。
+
+peripheralKeys 应遵循相同的准则。如果要执行加密，LTK是强制性的，而如果外设使用私有解析地址，则应该请求对端的IRK。
+
+有关密钥分发的详细指南，请参阅  4.1.3 节的 Table 2. Key Distribution guidelines。
+
+前三行是配对参数（centralKeys 和 peripheralKeys）和使用 Gap_SendSmpKeys 分发密钥的指南。
+
+如果执行LE安全连接配对（BLE 4.2），则LTK在内部生成，因此设备将忽略配对参数的密钥分发字段中的相应位。
+
+如果IRK也是分发的（其标志已在配对参数中设置），则应分发身份地址。因此，只能通过询问IRK（它在 gapSmpKeyFlags_t 结构中没有单独的标志）来“询问”它，因此是N/A。
+
+分发密钥的协商如下：
+* 在SMP配对请求（由 Gap_Pair 启动）中，中央为要分发（centralKeys）和接收（peripheralKeys）的密钥设置标志  
+ ![Table 2. Key Distribution guidelines](../Pic/BLE%20Application%20Developer's%20Guide-Table2.jpg)
+* 外设检查这两个分发，并且在执行它认为必要的任何更改后必须发送SMP配对响应（由 Gap_AcceptPairingRequest 启动）。外设只允许将一些中央设置为1的标志设置为0，但不允许相反。例如，它不能 请求/分发 中央没有 提供/要求 的密钥。如果外设与中央的分发相反，它可以通过使用 Gap_RejectPairing 函数拒绝配对
+* 中央检查配对响应中的更新的分发。如果它与外设所做的更改相反，它可以拒绝配对（Gap_RejectPairing）。否则，配对继续，并且在密钥分发阶段（gConnEvtKeyExchangeRequest_c 事件），只有最终协商的密钥包含在与 Gap_SendSmpKeys 一起发送的密钥结构中
+* 对于LE安全连接（两个设备都在配对请求和配对响应数据包的 AuthReq 字段中设置 SC 位），LTK不会被分发，它将被生成，并且配对响应包的 Inittiator Key Distribution 和 Responder Key Distribution 字段中的相应位应设置为0。
+
+如果使用LE安全连接配对（BLE 4.2），并且需要交换OOB数据，则应用程序必须通过调用 Gap_LeScGetLocalOobData 函数从主机栈中获取本地LE SC OOB数据。数据包含在通用的 gLeScLocalOobData_c 事件中。
+
+在以下情况下刷新本地LE SC OOB数据：
+* Gap_LeScRegeneratePublicKey 函数被调用（gLeScPublicKeyRegenerated_c 通用事件也作为这个API的结果而产生）
+* 设备被重置(这也会导致公钥重新生成)
+
+如果配对继续，可能会发生以下连接事件：
+* 请求事件
+    * gConnEvtPasskeyRequest_c：配对需要PIN；应用程序必须使用 Gap_EnterPasskey(deviceId, passkey) 进行响应
+    * gConnEvtOobRequest_c：如果配对开始时双方都将 oobAvailable 设置为TRUE；应用程序必须使用 Gap_ProvideOob(deviceId, oob) 进行响应
+    * gConnEvtKeyExchangeRequest_c：配对已达到密钥交换阶段；应用程序必须使用 Gap_SendSmpKeys(deviceId, smpKeys) 进行响应
+    * gConnEvtLeScOobDataRequest_c：栈请求从对端（r，Cr 和 Addr）接收的LE SC OOB数据；应用程序必须使用 Gap_LeScSetPeerOobData(deviceId, leScOobData) 进行响应
+    * gConnEvtLeScDisplayNumericValue_c：栈请求显示和确认LE SC数值比较值；应用程序必须使用 Gap_LeScValidateNumericValue(deviceId, ncvValidated) 进行响应
+* 信息事件
+    * gConnEvtKeysReceived_c：密钥交换阶段完成；密钥自动保存在内部设备数据库中，并提供给应用程序进行即时检查；应用程序不必将密钥保存在NVM存储中，因为如果双方都将 withBonding 设置为TRUE，则会在内部完成
+    * gConnEvtAuthenticationRejected_c：对端设备拒绝配对；事件数据的 rejectReason 参数指示外设与配对参数不一致的原因（它不能是 gLinkEncryptionFailed_c，因为该原因是为链路加密失败保留的）
+    * gConnEvtPairingComplete_c：配对过程已成功完成，或者在SMP数据包交换期间可能发生错误；请注意，这与 gConnEvtKeyExchangeRequest_c 事件不同；后者表示配对被对端拒绝，而前者则用于因SMP数据包交换而导致的失败
+    * gConnEvtLeScKeypressNotification_c：栈通知应用程序在 Passkey Entry Pairing Method 期间已收到远程 SMP Keypress Notification
+
+链路加密或配对成功完成后，中央可以立即开始使用GATT API交换数据。
+
+![Figure 3. Central pairing flow – APIs and eventsGap_RejectPairing may be called on any pairing event](../Pic/BLE%20Application%20Developer's%20Guide-Figure3.jpg)
 
