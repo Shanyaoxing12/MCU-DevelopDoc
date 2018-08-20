@@ -32,6 +32,26 @@
             - [4.4.3.1 扫描和启动](#4431-%E6%89%AB%E6%8F%8F%E5%92%8C%E5%90%AF%E5%8A%A8)
             - [4.4.3.2 广告](#4432-%E5%B9%BF%E5%91%8A)
             - [4.4.3.3 连接](#4433-%E8%BF%9E%E6%8E%A5)
+- [5. 通用属性配置文件(GATT)层](#5-%E9%80%9A%E7%94%A8%E5%B1%9E%E6%80%A7%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6gatt%E5%B1%82)
+    - [5.1 客户端API](#51-%E5%AE%A2%E6%88%B7%E7%AB%AFapi)
+        - [5.1.1 安装客户端回调](#511-%E5%AE%89%E8%A3%85%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%9B%9E%E8%B0%83)
+            - [5.1.1.1 客户端程序回调](#5111-%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%A8%8B%E5%BA%8F%E5%9B%9E%E8%B0%83)
+            - [5.1.1.2 通知和指示回调](#5112-%E9%80%9A%E7%9F%A5%E5%92%8C%E6%8C%87%E7%A4%BA%E5%9B%9E%E8%B0%83)
+        - [5.1.2 MTU交换](#512-mtu%E4%BA%A4%E6%8D%A2)
+        - [5.1.3 服务和特征发现](#513-%E6%9C%8D%E5%8A%A1%E5%92%8C%E7%89%B9%E5%BE%81%E5%8F%91%E7%8E%B0)
+            - [5.1.3.1 发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)
+            - [5.1.3.2 发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)
+            - [5.1.3.3 发现包含的服务](#5133-%E5%8F%91%E7%8E%B0%E5%8C%85%E5%90%AB%E7%9A%84%E6%9C%8D%E5%8A%A1)
+            - [5.1.3.4 发现服务的所有特征](#5134-%E5%8F%91%E7%8E%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E6%89%80%E6%9C%89%E7%89%B9%E5%BE%81)
+            - [5.1.3.5 发现特征(通过UUID)](#5135-%E5%8F%91%E7%8E%B0%E7%89%B9%E5%BE%81%E9%80%9A%E8%BF%87uuid)
+            - [5.1.3.6 发现特征描述符](#5136-%E5%8F%91%E7%8E%B0%E7%89%B9%E5%BE%81%E6%8F%8F%E8%BF%B0%E7%AC%A6)
+        - [5.1.4 读取和写入特征](#514-%E8%AF%BB%E5%8F%96%E5%92%8C%E5%86%99%E5%85%A5%E7%89%B9%E5%BE%81)
+            - [5.1.4.1 特征值读取程序](#5141-%E7%89%B9%E5%BE%81%E5%80%BC%E8%AF%BB%E5%8F%96%E7%A8%8B%E5%BA%8F)
+            - [5.1.4.2 特征读取(通过UUID)程序](#5142-%E7%89%B9%E5%BE%81%E8%AF%BB%E5%8F%96%E9%80%9A%E8%BF%87uuid%E7%A8%8B%E5%BA%8F)
+            - [5.1.4.3 特征读取(多个)程序](#5143-%E7%89%B9%E5%BE%81%E8%AF%BB%E5%8F%96%E5%A4%9A%E4%B8%AA%E7%A8%8B%E5%BA%8F)
+            - [5.1.4.4 特征写入程序](#5144-%E7%89%B9%E5%BE%81%E5%86%99%E5%85%A5%E7%A8%8B%E5%BA%8F)
+        - [5.1.5 读取和写入特征描述符](#515-%E8%AF%BB%E5%8F%96%E5%92%8C%E5%86%99%E5%85%A5%E7%89%B9%E5%BE%81%E6%8F%8F%E8%BF%B0%E7%AC%A6)
+        - [5.1.6 重置程序](#516-%E9%87%8D%E7%BD%AE%E7%A8%8B%E5%BA%8F)
 
 
 # 1. 前言
@@ -69,6 +89,7 @@ BLE主机栈库包含许多外部引用，应用程序必须定义这些引用�
 ## 2.1 RTOS任务队列和事件
 
 这些任务队列在 **ble_host_tasks.h** 中声明，如下：
+
 ```c
 /*! App to Host message queue for the Host Task */
 extern msgQueue_t gApp2Host_TaskQueue;
@@ -87,6 +108,7 @@ extern osaEventId_t gHost_TaskEvent;
 相反，应用程序必须根据其需求和约束分配内存、定义和填充数据库。可以静态地、在应用程序编译时或动态地这样做。
 
 无论应用程序如何创建GATT数据库，都必须定义 **gatt_database.h** 中的以下两个外部引用：
+
 ```c
 /*! The number of attributes in the GATT Database. */
 extern uint16_t gGattDbAttributeCount_c;
@@ -96,6 +118,7 @@ extern gattDbAttribute_t gattDatabase[];
 ```
 
 属性模板（gattDbAttribute_t）定义如下：
+
 ```c
 typedefstruct gattDbAttribute_tag {
     uint16_t handle ; 
@@ -120,6 +143,7 @@ typedefstruct gattDbAttribute_tag {
 主机栈包含一个内部设备信息管理，它依赖于访问非易失性内存来存储和加载绑定的设备数据。
 
 应用程序开发者通过定义三个函数和一个变量来确定NVM访问机制。函数必须首先对信息进行预处理，然后执行标准的NVM操作（擦除、写入、读取）。声明如下：
+
 ```c
 extern void App_NvmErase
 (
@@ -182,6 +206,7 @@ extern void App_NvmRead
 应用程序开发者需要将主机任务配置为主机栈需求的一部分。任务是运行所有主机层的环境（GAP、GATT、ATT、L2CAP、SM、GATTDB）
 
 任务函数的原型在 **ble_host_tasks.h** 文件中：
+
 ```c
 void Host_TaskHandler(void * args);
 ```
@@ -199,6 +224,7 @@ void Host_TaskHandler(void * args);
 在平台设置完成并启动所有RTOS任务之后，必须初始化主机栈。
 
 需要调用的函数位于 **ble_general.h** 文件中，并具有以下原型：
+
 ```c
 bleResult_t Ble_HostInitialize
 (
@@ -220,6 +246,7 @@ hostToControllerInterface 是主机栈的HCI出口点。这是主机每次尝试
 ## 3.3 HCI出入点
 
 主机栈的HCI入口点位于 **ble_general.h** 文件中的第二个函数：
+
 ```c
 void Ble_HciRecv
 (
@@ -264,11 +291,14 @@ void Ble_HciRecv
 控制器接口包含一个API，可用于将无线发射功率设置为不同的级别。
 
 对于广告和连接通道，可以使用以下宏设置不同的功率级别：
+
 ```c
 #define Controller_SetAdvertisingTxPowerLevel(level) \
 Controller_SetTxPowerLevel(level,gAdvTxChannel_c)
 ```
+
 和
+
 ```c
 #define Controller_SetConnectionTxPowerLevel(level) \
 Controller_SetTxPowerLevel(level,gConnTxChannel_c)
@@ -306,6 +336,7 @@ GAP定义了BLE设备在BLE系统中可能具有的四种角色（见 4.1.3 节�
 ### 4.1.1 扫描
 
 中央设备的最基本设置从扫描开始，由 **gap_interface.h** 中的以下函数执行：
+
 ```c
 bleResult_t Gap_StartScanning
 (
@@ -315,6 +346,7 @@ bleResult_t Gap_StartScanning
 ```
 
 如果 pScanningParameters 指针为NULL，则使用当前设置的参数。如果在设备上电后未设置任何参数，则使用标准默认值：
+
 ```c
 #define gGapDefaultScanningParameters_d \
 { \
@@ -329,6 +361,7 @@ bleResult_t Gap_StartScanning
 定义非默认扫描参数的最简单方法是使用上述默认值初始化 gapScanningParameters_t 结构，并只更改所需的字段。
 
 例如，要执行主动扫描并仅扫描白名单中的设备，可以使用以下代码：
+
 ```c
 gapScanningParameters_t scanningParameters = gGapDefaultScanningParameters_d;
 scanningParameters.type = gGapScanTypeActive_c;
@@ -339,6 +372,7 @@ Gap_StartScanning(&scanningParameters, scanningCallback);
 scanningCallback 通过GAP层与扫描有关的信号事件触发。
 
 最重要的事件是 gDeviceScanned_c 事件，每次扫描到广告设备时都会触发该事件。此事件的数据包含有关广告者的信息：
+
 ```c
 typedefstruct gapScannedDevice_tag {
     bleAddressType_t                 addressType;
@@ -353,6 +387,7 @@ typedefstruct gapScannedDevice_tag {
 如果此信息表示为中央想要连接的已知外设，则后者必须停止扫描和连接到该外设。
 
 要停止扫描，请调用此函数：
+
 ```c
 bleResult_t Gap_StopScanning (void);
 ```
@@ -360,6 +395,7 @@ bleResult_t Gap_StopScanning (void);
 默认情况下，GAP层配置为使用 gDeviceScanned_c 事件类型将所有已扫描到的设备报告给应用程序。但是，某些用例可能需要执行特定的GAP发现程序，其中广告报告必须通过广告数据中的 Flags AD 值进行过滤。其他用例要求主机栈在扫描特定设备时自动发起连接。
 
 要启用基于 Flags AD 值的过滤或设置自动连接的设备地址，必须在扫描开始之前调用以下函数：
+
 ```c
 bleResult_tGap_SetScanMode
 (
@@ -377,6 +413,7 @@ bleResult_tGap_SetScanMode
 ### 4.1.2 发起和关闭连接
 
 要连接到已扫描的外设，请从 gDeviceScanned_c 事件数据中提取其地址和地址类型，停止扫描并调用以下函数：
+
 ```c
 bleResult_t Gap_Connect
 (
@@ -386,6 +423,7 @@ bleResult_t Gap_Connect
 ```
 
 创建连接参数结构的简单方法是使用默认值初始化它，然后仅更改需要的字段。默认结构定义如下：
+
 ```c
 #define gGapDefaultConnectionRequestParameters_d \
 { \
@@ -405,6 +443,7 @@ bleResult_t Gap_Connect
 ```
 
 在以下示例中，中央扫描一个具有已知地址的特定心率传感器。当它找到它时，它立即连接到它。
+
 ```c
 static bleDeviceAddress_t heartRateSensorAddress = { 0xa1, 0xb2, 0xc3, 0xd4, 0xe5, 0xf6 };
 static bleAddressType_t hrsAddressType = gBleAddrTypePublic_c;
@@ -448,6 +487,7 @@ voidgapScanningCallback( gapScanningEvent_t * pScanningEvent)
 ```
 
 connCallback 由GAP触发，以发送与活动连接相关的所有事件。它有以下原型：
+
 ```c
 typedef void (* gapConnectionCallback_t )
 (
@@ -457,6 +497,7 @@ typedef void (* gapConnectionCallback_t )
 ```
 
 在这个回调中应该监听的第一个事件是 gConnEvtConnected_c 事件。如果应用程序决定在产生此事件之前删除连接建立，它应该调用以下宏：
+
 ```c
 #define Gap_CancelInitiatingConnection()\
     Gap_Disconnect(gCancelOngoingInitiatingConnection_d)
@@ -467,6 +508,7 @@ typedef void (* gapConnectionCallback_t )
 在接收到 gConnEvtConnected_c 事件时，应用程序可以继续从事件数据（pConnectionEvent->event.connectedEvent）中提取必要的参数。要保存的最重要的参数是 deviceId。
 
 deviceId 是一个唯一的8位无符号整数，用于识别后续GAP和GATT的API调用的活动连接。与某个连接相关的所有功能都需要deviceId 参数。例如，要断开连接，请调用此函数：
+
 ```c
 bleResult_t Gap_Disconnect
 (
@@ -477,6 +519,7 @@ bleResult_t Gap_Disconnect
 ### 4.1.3 配对和绑定
 
 用户连接到外设后，使用以下功能检查此设备过去是否已绑定：
+
 ```c
 bleResult_t Gap_CheckIfBonded
 (
@@ -486,6 +529,7 @@ bleResult_t Gap_CheckIfBonded
 ```
 
 如果有，可以通过以下方式请求链路加密：
+
 ```c
 bleResult_t Gap_EncryptLink
 (
@@ -496,6 +540,7 @@ bleResult_t Gap_EncryptLink
 如果链路加密成功，则会触发 gConnEvtEncryptionChanged_c 连接事件。否则，将收到 gConnEvtAuthenticationRejected_c 事件，并将 rejectReason 事件数据参数设置为 gLinkEncryptionFailed_c。
 
 另一方面，如果这是一个新设备（未绑定），可以启动配对，如下所示：
+
 ```c
 bleResult_t Gap_Pair
 (
@@ -505,6 +550,7 @@ bleResult_t Gap_Pair
 ```
 
 配对参数如下所示：
+
 ```c
 typedef struct gapPairingParameters_tag {
     bool_t                       withBonding;
@@ -586,6 +632,7 @@ peripheralKeys 应遵循相同的准则。如果要执行加密，LTK是强制�
 ### 4.2.1 广告
 
 在开始广告之前，应配置广告参数。否则，使用以下默认值：
+
 ```c
 #define gGapDefaultAdvertisingParameters_d \
 { \
@@ -603,6 +650,7 @@ peripheralKeys 应遵循相同的准则。如果要执行加密，LTK是强制�
 要设置不同的广告参数，应分配 gapAdvertisingParameters_t 结构并使用默认值进行初始化。然后，可以修改必要的字段。
 
 之后，应调用以下函数：
+
 ```c
 bleResult_t Gap_SetAdvertisingParameters
 (
@@ -615,6 +663,7 @@ bleResult_t Gap_SetAdvertisingParameters
 接下来，应该配置广告数据，并且如果广告类型支持主动扫描，则还应该配置扫描响应数据。如果未配置其中任何一个，则默认为空数据。
 
 用于配置广告 和/或 扫描响应数据的函数如下所示：
+
 ```c
 bleResult_t Gap_SetAdvertisingData
 (
@@ -628,6 +677,7 @@ bleResult_t Gap_SetAdvertisingData
 应用程序应该监听 gAdvertisingDataSetupComplete_c 通用事件。
 
 完成所有必要的设置后，可以使用此函数启动广告：
+
 ```c
 bleResult_t Gap_StartAdvertising
 (
@@ -643,6 +693,7 @@ advertisingCallback 用于接收广告事件（广告状态更改或广告命令
 如果中央发起与此外设的连接，则会触发 gConnEvtConnected_c 连接事件。
 
 要在外设尚未收到任何连接请求时停止广告，请使用此函数：
+
 ```c
 bleResult_t Gap_StopAdvertising (void);
 ```
@@ -660,6 +711,7 @@ bleResult_t Gap_StopAdvertising (void);
 首先，在构建GATT数据库时（请参阅[创建GATT数据库]()），敏感属性应该在其访问权限中内置安全性（例如，只读/带有身份验证读取/带有身份验证写入/具有授权写入，等等）。
 
 其次，如果GATT数据库除了在属性权限中已经指定的安全性之外还需要额外的安全性（例如，某些服务在某些情况下需要更高的安全性），则必须调用以下函数：
+
 ```c
 bleResult_t Gap_RegisterDeviceSecurityRequirements
 (
@@ -672,6 +724,7 @@ bleResult_t Gap_RegisterDeviceSecurityRequirements
 虽然外设不会启动任何类型的安全程序，但它可以向中央通报其安全要求。这通常在连接之后立即执行，以避免为请求而交换无用的数据包（因安全性不足可能被拒绝）。
 
 通知在SMP级别通过从设备安全请求包被执行。要使用它，请提供以下GAP API：
+
 ```c
 bleResult_t Gap_SendSlaveSecurityRequest
 (
@@ -688,6 +741,7 @@ bondAfterPairing 参数向中央指示此外设是否可以绑定，securityMode
 如果两个设备已经绑定过，则外设应该期望接收 gConnEvtLongTermKeyRequest_c 连接事件（除非执行LE安全连接配对，如BLE 4.2中所指定的），这意味着中央也识别为绑定，而不是配对，它直接使用先前共享的LTK加密链路。此时，本地LE控制器请求主机提供在配对期间交换的相同的LTK。
 
 当设备先前已配对过时，除了外设的LTK，还会发送EDIV（2字节）和RAND（8字节）值（它们由SMP定义）。因此，在向控制器提供密钥之前，应用程序应检查这两个值是否与 gConnEvtLongTermKeyRequest_c 事件中接收的值匹配。如果他们这样做，应用程序应回复：
+
 ```c
 bleResult_t Gap_ProvideLongTermKey
 (
@@ -700,6 +754,7 @@ bleResult_t Gap_ProvideLongTermKey
 LTK的大小不能超过最大值：16。
 
 如果EDIV和RAND值不匹配，或者外设无法识别绑定，则可以拒绝加密请求：
+
 ```c
 bleResult_t Gap_DenyLongTermKey
 (
@@ -712,6 +767,7 @@ bleResult_t Gap_DenyLongTermKey
 如果设备未绑定，则外设应该期望接收 gConnEvtPairingRequest_c，这指示中央已启动了配对。
 
 如果应用程序接受配对参数（请参阅[配对和绑定](#413-%E9%85%8D%E5%AF%B9%E5%92%8C%E7%BB%91%E5%AE%9A)以获取详细说明），它可以回复：
+
 ```c
 bleResult_t Gap_AcceptPairingRequest
 (
@@ -723,6 +779,7 @@ bleResult_t Gap_AcceptPairingRequest
 这时，外设发送自己的配对参数，如SMP所定义。
 
 发送此响应后，应用程序应该期望接收与中央相同的配对事件（请参阅[配对和绑定](#413-%E9%85%8D%E5%AF%B9%E5%92%8C%E7%BB%91%E5%AE%9A)），但有一个例外：如果应用程序在连接之前通过调用如下API设置了配对的密钥（PIN），则 gConnEvtPasskeyRequest_c 事件不会被调用：
+
 ```c
 bleResult_t Gap_SetLocalPasskey
 (
@@ -735,6 +792,7 @@ bleResult_t Gap_SetLocalPasskey
 如果外设应用程序从不调用 Gap_SetLocalPasskey，则 gConnEvtPasskeyRequest_c 事件将照常发送到应用程序。
 
 外设可以使用以下API来拒绝配对过程：
+
 ```c
 bleResult_t Gap_RejectPairing
 (
@@ -756,6 +814,7 @@ Gap_RejectPairing 函数不仅可以在接收到配对请求后被调用，还�
 该新特性将最大数据通道有效负载长度从27个字节扩展到251个字节（8-bit）。
 
 建立连接后，链路层会立即自动完成长度管理。栈传递默认值，用于表示最大传输的有效负载字节数和最大包传输时间，应用程序在编译时在 **ble_globals.c** 中配置该默认值：
+
 ```c
 #ifndef gBleDefaultTxOctets_c
 #define gBleDefaultTxOctets_c 0x00FB
@@ -767,6 +826,7 @@ Gap_RejectPairing 函数不仅可以在接收到配对请求后被调用，还�
 ```
 
 设备可以在连接时随时更新数据长度。触发此机制的函数如下：
+
 ```c
 bleResult_t Gap_UpdateLeDataLength
 (
@@ -823,6 +883,7 @@ bleResult_t Gap_UpdateLeDataLength
 ### 4.4.2 主机隐私
 
 要启用或禁用主机隐私，可以使用以下API：
+
 ```c
 bleResult_t Gap_EnableHostPrivacy
 (
@@ -838,6 +899,7 @@ bleResult_t Gap_EnableHostPrivacy
 ### 4.4.3 控制器隐私
 
 要启用或禁用控制器隐私，可以使用以下API：
+
 ```c
 bleResult_t Gap_EnableControllerPrivacy
 (
@@ -877,4 +939,1185 @@ aPeerIdentities 是每个绑定设备的身份信息的数组。身份信息包�
 如果对端使用RPA是可以通过使用从列表中IRK进行解析的，那么 peerRpaResolved 字段等于TRUE。在这种情况下， peerAddressType 和 peerAddress 字段包含已解析设备的身份地址，peerRpa 字段包含用于创建连接的实际RPA（中央在启动连接时使用的RPA，或外设广告使用的RPA）。
 
 如果本地控制器已自动生成一个RPA（当连接已创建时），那么 localRpaUsed 字段等于TRUE，并且 localRpa 字段包含实际RPA。
+
+------------------------------------------------------------------------------------------------------------------------
+
+# 5. 通用属性配置文件(GATT)层
+
+GATT层包含用于发现服务和特征以及在设备之间传输数据的API。
+
+GATT层建立在属性协议（ATT）之上，该协议在专用的L2CAP信道（信道ID：0x04）上进行BLE设备间数据传输。
+
+一旦在设备之间建立连接，就可以随时使用GATT API。其无需初始化，因为其会自动创建L2CAP通道。
+
+为了识别GATT对端实例，使用GAP层的相同 deviceId 值（在 gConnEvtConnected_c 连接事件中获得）。
+
+有两个GATT角色定义在通过ATT交换数据的两个设备上：
+* GATT服务器 - 包含GATT数据库的设备，GATT数据库是一个暴露有意义数据的服务和特征的集合。通常，服务器会响应客户端发送的请求和命令，但可以将其配置为通过通知和指示自行发送数据。
+* GATT客户端 - 通常向服务器发送请求和命令以发现服务器数据库上的服务和特征并交换数据的“活动”设备。
+
+没有固定的规则来决定哪个设备是客户端，哪个设备是服务器。任何设备都可以随时发起请求，从而临时充当客户端，对端设备可以响应该请求，前提是它具有支持充当服务器和具有GATT数据库。
+
+通常，GAP 中央充当GATT客户端，以发现服务和特征，并从GAP外设（通常具有GATT数据库）中获取数据。许多标准BLE配置文件都假设外设具有数据库并且必须充当服务器。但是，这绝不是通用的规则。
+
+## 5.1 客户端API
+
+客户端可以配置ATT MTU，发现服务和特征，并启动数据交换。
+
+所有函数都具有相同的第一个参数：deviceId，用于标识GATT服务器在GATT过程中作为目标的连接设备。这是必要的，因为客户端可能同时连接到多个服务器。
+
+但是，首先，应用程序必须安装必要的回调。
+
+> PS：MTU - 最大传输单元（Maximum Transmission Unit）是指一种通信协议的某一层上面所能通过的最大数据包大小（以字节为单位）
+
+### 5.1.1 安装客户端回调
+
+客户端应用程序必须安装三个回调。
+
+#### 5.1.1.1 客户端程序回调
+
+客户端启动的所有程序都是异步的。他们依靠OTA交换ATT数据包。
+
+要获知程序完成的情况，应用程序必须安装带有以下信号的回调：
+
+```c
+typedef void (* gattClientProcedureCallback_t )
+(
+    deviceId_t               deviceId,
+    gattProcedureType_t      procedureType,
+    gattProcedureResult_t    procedureResult,
+    bleResult_t              error
+);
+```
+
+要安装此回调，必须调用以下函数：
+
+```c
+bleResult_t GattClient_RegisterProcedureCallback
+(
+    gattClientProcedureCallback_t callback
+);
+```
+
+procedureType 参数可以用来识别已经开始和已经完成的程序。在给定时刻只能有一个程序处于活动状态。尝试在一个程序正在进行时启动另一个程序会返回错误 gGattAnotherProcedureInProgress_c。
+
+procedureResult 参数指示程序是否成功地完成或者发生了错误。在后一种情况下，error 参数包含错误代码。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t               deviceId,
+    gattProcedureType_t      procedureType,
+    gattProcedureResult_t    procedureResult,
+    bleResult_t              error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+    }
+}
+
+GattClient_RegisterProcedureCallback(gattClientProcedureCallback);
+```
+
+#### 5.1.1.2 通知和指示回调
+
+当客户端从服务器接收到通知时，它会触发一个以下原型的回调：
+
+```c
+typedef void (* gattClientNotificationCallback_t )
+(
+    deviceId_t    deviceId,
+    uint16_t      characteristicValueHandle,
+    uint8_t *     aValue,
+    uint16_t      valueLength
+);
+```
+
+deviceId 用以识别服务器连接（同时多个连接）。characteristicValueHandle 是GATT数据库中特征值声明的属性手柄。客户端必须先发现它才能识别它。
+
+必须安装回调：
+
+```c
+bleResult_t GattClient_RegisterNotificationCallback
+(
+    gattClientNotificationCallback_t callback
+);
+```
+
+指示的定义与之相似。
+
+当收到通知或指示时，客户端使用 characteristicValueHandle 来确认那些特征被通知。客户端必须知道可能在任何时候被 通知/指示 的特征值句柄，因为它先前已通过编写CCCD来激活它们（请参阅[读取和写入特征描述符](#515-%E8%AF%BB%E5%8F%96%E5%92%8C%E5%86%99%E5%85%A5%E7%89%B9%E5%BE%81%E6%8F%8F%E8%BF%B0%E7%AC%A6)）。
+
+### 5.1.2 MTU交换
+
+通过BLE发送的无线数据包最多包含27个字节的L2CAP层数据。由于L2CAP报头长度为4个字节（包括信道ID），所以在L2CAP层上的所有层（包括ATT和GATT）可能只在无线数据包中发送23个字节的数据（根据低功耗蓝牙4.1规范）。
+
+> NOTE：此数字是固定的，在BLE 4.1中不能增加。
+
+为了维持无线数据包和ATT数据包之间的逻辑映射，标准已将ATT数据包的默认长度（也叫ATT_MTU）设置为23。因此，任何ATT请求都适合单个无线数据包。如果ATT上面的层希望发送超过23个字节的数据，则需要将数据包分割小包并发出多个ATT请求。
+
+然而，ATT协议允许设备增加ATT_MTU（前提是两个设备都支持）。增加ATT_MTU只有一个作用：应用程序不必对长数据进行分段，即它发送的单个事务可以超过23个字节。分片被移到L2CAP层。然而，在空中仍然会发送多个无线包。
+
+如果GATT客户端支持大于默认的MTU，它应该在连接到任何服务器后立即启动MTU交换。在MTU交换期间，两个设备都将其最大MTU发送到另一个，并且选择两者中的最小值为新的MTU。
+
+例如，如果客户端支持的最大ATT_MTU为250，并且服务器支持最大值120，则在交换后，两个设备都将新的ATT_MTU值设置为120。
+
+要启动MTU交换，请从 **gatt_client_interface.h** 调用以下函数 ：
+
+```c
+bleResult_t result = GattClient_ExchangeMtu(deviceId);
+
+if (gBleSuccess_c != result)
+{
+    /* Treat error */
+}
+```
+
+本地设备支持的最大ATT_MTU的值不必包含在请求中，因为它是静态的。它在 **ble_constants.h** 文件中以名称 gAttMaxMtu_c 定义。在GATT内部实现，ATT Exchange MTU 请求（和服务器的响应）使用该值。
+
+交换完成后，客户端回调通过 gGattProcExchangeMtu_c 程序类型触发。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t deviceId,
+    gattProcedureType_t procedureType,
+    gattProcedureResult_t procedureResult,
+    bleResult_t error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcExchangeMtu_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* To obtain the new MTU */
+                uint16_t newMtu;
+                bleResult_t result = Gatt_GetMtu(deviceId, &newMtu);
+                if (gBleSuccess_c == result)
+                {
+                    /* Use the value of the new MTU */
+                    (void) newMtu;
+                }
+            }
+            else
+            {
+                /* Handle error */
+            }
+            break;
+        
+        /* ... */
+    }
+}
+```
+
+### 5.1.3 服务和特征发现
+
+有多个可用于发现的API，应用程序可以根据需求使用它们。
+
+#### 5.1.3.1 发现所有主要服务
+
+以下API可用于发现服务器数据库中的所有主要服务：
+
+```c
+bleResult_t GattClient_DiscoverAllPrimaryServices
+(
+    deviceId_t        deviceId,
+    gattService_t *   aOutPrimaryServices,
+    uint8_t           maxServiceCount,
+    uint8_t *         pOutDiscoveredCount
+);
+```
+
+aOutPrimaryServices 参数必须指向一个已分配的服务数组。数组的大小必须等于 maxServiceCount 参数的值，该参数将被传递以确保GATT模块在发现的服务超出预期时不会尝试写入数组的末尾。
+
+pOutDiscoveredCount 参数必须指向一个静态变量，因为GATT模块使用它来写入在程序结束时已发现服务的数量。此数量小于或等于 maxServiceCount。
+
+如果数量相等，则服务数量可能多于 maxServiceCount 个，但由于数组大小限制而无法发现它们。应用程序开发者负责根据服务器数据库的预期内容分配足够大的数字。
+
+在以下示例中，应用程序希望在服务器上找到不超过10个服务。
+
+```c
+#define mcMaxPrimaryServices_c 10
+static gattService_t primaryServices[mcMaxPrimaryServices_c];
+uint8_t mcPrimaryServices;
+
+bleResult_t result = GattClient_DiscoverAllPrimaryServices
+(
+    deviceId,
+    primaryServices,
+    mcMaxPrimaryServices_c,
+    &mcPrimaryServices
+);
+
+if (gBleSuccess_c != result)
+{
+    /* Treat error */
+}
+```
+
+完成后，该操作将触发客户端程序回调。应用程序可以读取已发现服务的数量以及每个服务的句柄范围和UUID。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t deviceId,
+    gattProcedureType_t procedureType,
+    gattProcedureResult_t procedureResult,
+    bleResult_t error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcDiscoverAllPrimaryServices_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* Read number of discovered services */
+                PRINT( mcPrimaryServices );
+                /* Read each service's handle range and UUID */
+                for (int j = 0; j < mcPrimaryServices; j++)
+                {
+                    PRINT( primaryServices[j].startHandle );
+                    PRINT( primaryServices[j].endHandle );
+                    PRINT( primaryServices[j].uuidType );
+                    PRINT( primaryServices[j].uuid );
+                }
+            }
+            else
+            {
+                /* Handle error */
+                PRINT( error );
+            }
+            break;
+        /* ... */
+    }
+}
+```
+
+#### 5.1.3.2 发现主要服务(通过UUID)
+
+要仅发现已知类型（服务UUID）的主要服务，可以使用以下API：
+
+```c
+bleResult_t GattClient_DiscoverPrimaryServicesByUuid
+(
+    deviceId_t        deviceId,
+    bleUuidType_t     uuidType,
+    bleUuid_t *       pUuid,
+    gattService_t *   aOutPrimaryServices,
+    uint8_t           maxServiceCount,
+    uint8_t *         pOutDiscoveredCount
+);
+```
+
+该程序与[发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)中描述的程序非常相似。唯一的区别是这次我们根据两个额外参数描述的服务UUID来过滤搜索：pUuid 和 uuidType。
+
+该程序在客户端只对特定类型的服务感兴趣时非常有用。通常，它在已知包含某些服务（某些配置文件特定的）的服务器上执行。因此，大多数情况下，搜索期望找到给定类型的单个服务。结果通常只分配一个结构。
+
+例如，当两个设备实例心率（HR）配置文件时，HR收集器连接到HR传感器，并且可能仅对心率服务（HRS）和其特征感兴趣。以下代码示例演示如何实现此目的。服务和特性UUID的标准值（由Bluetooth SIG定义）位于 **ble_sig_defines.h** 文件中。
+
+```c
+static gattService_t heartRateService;
+static uint8_t mcHrs;
+bleResult_t result = GattClient_DiscoverPrimaryServicesByUuid
+(
+    deviceId,
+    gBleUuidType16_c,            /* Service UUID type */
+    gBleSig_HeartRateService_d,  /* Service UUID */
+    &heartRateService,           /* Only one HRS is expected to be found */
+    1,
+    &mcHrs                      /* Will be equal to 1 at the end of the procedure if the HRS is found, 0 otherwise */
+);
+
+if (gBleSuccess_c != result)
+{
+    /* Treat error */
+}
+```
+
+在客户端程序回调中，应用程序应检查是否找到具有给定UUID的任何服务并读取其句柄范围（也可以在该服务范围内继续进行特征发现）。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t deviceId,
+    gattProcedureType_t procedureType,
+    gattProcedureResult_t procedureResult,
+    bleResult_t error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcDiscoverPrimaryServicesByUuid_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                if (1 == mcHrs)
+                {
+                    /* HRS found, read the handle range */
+                    PRINT( heartRateService.startHandle );
+                    PRINT( heartRateService.endHandle );
+                }
+                else
+                {
+                    /* HRS not found! */
+                }
+            }
+            else
+            {
+                /* Handle error */
+                PRINT( error );
+            }
+            break;
+        /* ... */
+    }
+}
+```
+
+#### 5.1.3.3 发现包含的服务
+
+[发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)显示如何发现主要服务。但是，服务器也可能包含辅助服务，这些辅助服务不应单独使用，通常包含在主服务中。包含意味着所有辅助服务的特征都需要主服务的配置文件才可以使用。
+
+因此，在发现主服务后，可以使用以下程序来发现其中包含的服务（通常是辅助服务）：
+
+```c
+bleResult_t GattClient_FindIncludedServices
+(
+    deviceId_t         deviceId,
+    gattService_t *    pIoService,
+    uint8_t            maxServiceCount
+);
+```
+
+pIoService 指向的服务结构必须具有链接到已分配的服务数组的 aIncludedServices 字段，其大小为 maxServiceCount，根据要找到的包含的服务的预期数量进行选择。这是应用程序的选择，通常遵循配置文件规范。
+
+此外，必须设置服务的范围（startHandle 和 endHandle 字段），这可能已由先前的服务发现程序完成（如[发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)和[发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)中所述）。
+
+发现包含的服务的数量由GATT模块在 pIoService 结构的 cNumIncludedServices 字段中写入。显然，最多有 maxServiceCount 个包含的服务被发现。
+
+以下示例假定心率服务是使用[发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)中的程序发现的。
+
+```c
+/* Finding services included in the Heart Rate Primary Service */
+gattService_t * pPrimaryService = &heartRateService;
+
+#define mxMaxIncludedServices_c 3
+static gattService_t includedServices[mxMaxIncludedServices_c];
+
+/* Linking the array */
+pPrimaryService-> aIncludedServices = includedServices;
+
+bleResult_t result = GattClient_FindIncludedServices
+(
+    deviceId,
+    pPrimaryService,
+    mxMaxIncludedServices_c
+);
+
+if (gBleSuccess_c != result)
+{
+    /* Treat error */
+}
+```
+
+当客户端程序回调被触发时，如果找到任何包含的服务，则应用程序可以读取其句柄范围及其UUID。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t deviceId,
+    gattProcedureType_t procedureType,
+    gattProcedureResult_t procedureResult,
+    bleResult_t error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcFindIncludedServices_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* Read included services data */
+                PRINT( pPrimaryService-> cNumIncludedServices );
+                for (int j = 0; j < pPrimaryService-> cNumIncludedServices ; j++)
+                {
+                    PRINT( pPrimaryService-> aIncludedServices[j].startHandle );
+                    PRINT( pPrimaryService-> aIncludedServices[j].endHandle );
+                    PRINT( pPrimaryService-> aIncludedServices[j].uuidType );
+                    PRINT( pPrimaryService-> aIncludedServices[j].uuid );
+                }
+            }
+            else
+            {
+                /* Handle error */
+                PRINT( error );
+            }
+            break;
+        /* ... */
+    }
+}
+```
+
+#### 5.1.3.4 发现服务的所有特征
+
+特征发现的主要API有以下原型：
+
+```c
+bleResult_tGattClient_DiscoverAllCharacteristicsOfService
+(
+    deviceId_t         deviceId,
+    gattService_t *    pIoService,
+    uint8_t            maxCharacteristicCount
+);
+```
+
+所有必需的信息都包含在 pIoService 指向的服务结构中，最重要的是服务范围（startHandle 和 endHandle），其通常已由服务发现程序填写。如果没有，则需要手动写入。
+
+此外，服务结构的 aCharacteristics 字段必须链接到已分配的特征数组。
+
+以下示例发现[发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)部分中发现的心率服务中包含的所有特征。
+
+```c
+gattService_t* pService = &heartRateService
+
+#define mcMaxCharacteristics_c 10
+static gattCharacteristic_t hrsCharacteristics[mcMaxCharacteristics_c];
+
+pService->aCharacteristics = hrsCharacteristics;
+
+bleResult_t result = GattClient_DiscoverAllCharacteristicsOfService
+(
+    deviceId,
+    pService,
+    mcMaxCharacteristics_c
+);
+```
+
+当程序完成时，触发客户端程序回调。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t               deviceId,
+    gattProcedureType_t      procedureType,
+    gattProcedureResult_t    procedureResult,
+    bleResult_t              error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcDiscoverAllCharacteristics_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* Read number of discovered Characteristics */
+                PRINT(pService-> cNumCharacteristics );
+                /* Read discovered Characteristics data */
+                for ( uint8_t j = 0; j < pService-> cNumCharacteristics ; j++)
+                {
+                    /* Characteristic UUID is found inside the value field
+                     * to avoid duplication */
+                    PRINT(pService-> aCharacteristics[j].value.uuidType );
+                    PRINT(pService-> aCharacteristics[j].value.uuid );
+    
+                /* Characteristic Properties indicating the supported operations:
+                 * - Read
+                 * - Write
+                 * - Write Without Response
+                 * - Notify
+                 * - Indicate
+                 */
+                PRINT(pService-> aCharacteristics[j].properties );
+
+                /* Characteristic Value Handle - used to identify
+                 * the Characteristic in future operations */
+                PRINT(pService-> aCharacteristics[j].value.handle );
+                }
+            }
+            else
+            {
+                /* Handle error */
+                PRINT( error );
+            }
+            break;
+        /* ... */
+    }
+}
+```
+
+#### 5.1.3.5 发现特征(通过UUID)
+
+此程序在客户端打算在特定服务中发现特定特征时非常有用。API允许发现同一类型的多个特征，但通常是在预期找到给定类型的单个特征时使用。
+
+继续[发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)的示例，让我们假设客户端想要发现心率服务内的心率控制点特征，如下面的代码所示。
+
+```c
+gattService_t * pService = &heartRateService;
+
+static gattCharacteristic_t hrcpCharacteristic;
+static uint8_t mcHrcpChar;
+
+bleResult_t result = GattClient_DiscoverCharacteristicOfServiceByUuid
+(
+    deviceId,
+    gBleUuidType16_c,
+    gBleSig_HrControlPoint_d,
+    pService,
+    &hrcpCharacteristic,
+    1,
+    &mcHrcpChar
+);
+```
+
+此API可以像前面的示例一样使用，换言之，可以按照服务发现程序使用。但是，用户可能希望在整个数据库上使用UUID执行特征搜索，完全跳过服务发现。为此，必须定义伪服务结构，并且必须将其范围设置为最大值，如以下示例所示：
+
+```c
+gattService_t dummyService;
+dummyService.startHandle = 0x0001;
+dummyService.endHandle = 0xFFFF;
+static gattCharacteristic_t hrcpCharacteristic;
+static uint8_t mcHrcpChar;
+
+bleResult_t result = GattClient_DiscoverCharacteristicOfServiceByUuid
+(
+    deviceId,
+    gBleUuidType16_c,
+    gBleSig_HrControlPoint_d,
+    &dummyService,
+    &hrcpCharacteristic,
+    1,
+    &mcHrcpChar
+);
+```
+
+在任何情况下，都应该在程序回调中检查 mcHrcpChar 变量的值。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t               deviceId,
+    gattProcedureType_t      procedureType,
+    gattProcedureResult_t    procedureResult,
+    bleResult_t              error
+)
+{
+    switch (procedureType)
+    {
+    /* ... */
+    case gGattProcDiscoverCharacteristicByUuid_c:
+        if (gGattProcSuccess_c == procedureResult)
+        {
+            if (1 == mcHrcpChar)
+            {
+                /* HRCP found, read discovered data */
+                PRINT(hrcpCharacteristic.properties );
+                PRINT(hrcpCharacteristic.value.handle );
+            }
+            else
+            {
+                /* HRCP not found! */
+            }
+        }
+        else
+        {
+            /* Handle error */
+            PRINT(error);
+        }
+        break;
+    /* ... */
+    }
+}
+```
+
+#### 5.1.3.6 发现特征描述符
+
+为了发现一个特性的所有描述符，提供了以下API
+
+```c
+bleResult_t GattClient_DiscoverAllCharacteristicDescriptors
+(
+    deviceId_t                deviceId,
+    gattCharacteristic_t *    pIoCharacteristic,
+    uint16_t                  endingHandle,
+    uint8_t                   maxDescriptorCount
+);
+```
+
+pIoCharacteristic 指针必须指向与一个具有 value.handle 字段集（通过发现操作或应用程序）的特征结构和 aDescriptors 字段指向一个已分配的描述符结构数组。
+
+endingHandle 应该设置为数据库中下一个特征或服务声明的句柄，以指示何时必须停止对描述符的搜索。GATT客户端模块使用ATT查找信息请求来发现描述符，直到发现一个特征或服务声明，或者到达 endingHandle 为止。因此，通过提供正确的结束句柄，可以优化对描述符的搜索，从而避免了不必要的额外的空中包。
+
+但是，如果应用程序不知道下一个声明所在的位置并且无法提供此优化提示，则 endsHandle 应设置为 0xFFFF。
+
+继续[发现特征(通过UUID)](#5135-%E5%8F%91%E7%8E%B0%E7%89%B9%E5%BE%81%E9%80%9A%E8%BF%87uuid)的示例，以下代码假定心率控制点特征具有不超过5个描述符并执行描述符发现。
+
+```c
+#define mcMaxDescriptors_c 5
+static gattAttribute_t aDescriptors[mcMaxDescriptors_c];
+hrcpCharacteristic.aDescriptors = aDescriptors;
+
+bleResult_t result = GattClient_DiscoverAllCharacteristicDescriptors
+(
+    deviceId,
+    &hrcpCharacteristic,
+    0xFFFF, /* We don’t know where the next Characterstic/Service begins */
+    mcMaxDescriptors_c
+);
+
+if (gBleSuccess_c != result)
+{
+    /* Handle error */
+}
+```
+
+在该程序结束时，会触发客户端程序回调。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t               deviceId,
+    gattProcedureType_t      procedureType,
+    gattProcedureResult_t    procedureResult,
+    bleResult_t              error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcDiscoverAllCharacteristicDescriptors_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* Read number of discovered descriptors */
+                PRINT(hrcpCharacteristic.cNumDescriptors );
+                /* Read descriptor data */
+                for ( uint8_t j = 0; j < hrcpCharacteristic.cNumDescriptors ; j++)
+                {
+                    PRINT(hrcpCharacteristic.aDescriptors[j].handle );
+                    PRINT(hrcpCharacteristic.aDescriptors[j].uuidType );
+                    PRINT(hrcpCharacteristic.aDescriptors[j].uuid );
+                }
+            }
+            else
+            {
+                /* Handle error */
+                PRINT(error);
+            }
+            break;
+        /* ... */
+    }
+}
+```
+
+### 5.1.4 读取和写入特征
+
+#### 5.1.4.1 特征值读取程序
+
+读取特征值的主要API如下所示：
+
+```c
+bleResult_t GattClient_ReadCharacteristicValue
+(
+    deviceId_t                deviceId,
+    gattCharacteristic_t *    pIoCharacteristic,
+    uint16_t                  maxReadBytes
+);
+```
+
+这个程序假设应用程序知道特征值句柄，通常来自先前的特征发现程序。因此，必须完成 pIoCharacteristic 指向的结构的  value.handle 字段。
+
+此外，应用程序必须分配足够大的字节数组，以便写入接收到的值（来自ATT数据包交换）。maxReadBytes 参数设置为这个已分配数组的大小。
+
+GATT客户端模块通过在需要时发出重复的ATT读取Blob请求来透明地处理长特征，其长度大于单个ATT包的长度。
+
+以下示例假定应用程序知道特征值句柄，并且值长度是可变的，但限制为50个字节。
+
+```c
+gattCharacteristic_t myCharacteristic;
+myCharacteristic.value.handle = 0x10AB;
+
+#define mcMaxValueLength_c 50
+static uint8_t aValue[mcMaxValueLength_c];
+
+myCharacteristic.value.paValue = aValue;
+
+bleResult_t result = GattClient_ReadCharacteristicValue
+(
+    deviceId,
+    &myCharacteristic,
+    mcMaxValueLength_c
+);
+
+if (gBleSuccess_c != result)
+{
+    /* Handle error */
+}
+```
+
+无论值的长度如何，读取完成时都会触发客户端程序回调。接收的值长度也填充在 value 结构中。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t              deviceId,
+    gattProcedureType_t     procedureType,
+    gattProcedureResult_t   procedureResult,
+    bleResult_t             error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcReadCharacteristicValue_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* Read value length */
+                PRINT(myCharacteristic.value.valueLength );
+                /* Read data */
+                for ( uint16_t j = 0; j < myCharacteristic.value.valueLength ; j++)
+                {
+                    PRINT(myCharacteristic.value.paValue[j]);
+                }
+            }
+            else
+            {
+                /* Handle error */
+                PRINT(error);
+            }
+            break;
+        /* ... */
+    }
+}
+```
+
+#### 5.1.4.2 特征读取(通过UUID)程序
+
+此程序的API如下所示：
+
+```c
+bleResult_t GattClient_ReadUsingCharacteristicUuid
+(
+    deviceId_t      deviceId,
+    bleUuidType_t   uuidType,
+    bleUuid_t *     pUuid,
+    uint8_t *       aOutBuffer,
+    uint16_t        maxReadBytes,
+    uint16_t *      pOutActualReadBytes
+);
+```
+
+这为重要的优化提供了支持，这涉及在不执行任何服务或特征发现的情况下读取特征值。
+
+例如，以下是编写连接到任何服务器并希望读取设备名称的应用程序的过程。
+
+设备名称包含在GAP服务的设备名称特征中。因此，必要的步骤包括发现所有主要服务，通过其UUID识别GAP服务，发现GAP服务的所有特征并识别设备名称特征（或者，通过GAP服务中的UUID发现特征），最后，使用特征读取程序读取设备名称。
+
+相反，特征读取(通过UUID)程序允许读取一个具有指定UUID的特征，假设服务器上存在一个特征，而不知道特征值句柄。
+
+所描述的示例实现如下：
+
+```c
+#define mcMaxValueLength_c 20
+static uint8_t aValue[2 + mcMaxValueLength_c]; //First 2 bytes are the handle
+static uint16_t deviceNameLength;
+
+bleUuid_t uuid = {
+    .uuid16 = gBleSig_GapDeviceName_d
+};
+
+bleResult_t result = GattClient_ReadUsingCharacteristicUuid
+(
+    deviceId,
+    gBleUuidType16_c,
+    &uuid,
+    aValue,
+    mcMaxValueLength_c,
+    &deviceNameLength
+);
+
+if (gBleSuccess_c != result)
+{
+    /* Handle error */
+}
+```
+
+读取完成后将触发客户端程序回调。因为在此程序中只交换了一个空中包，因此只能用作长度不大于 ATT_MTU - 1 的特征值的快速读取。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t               deviceId,
+    gattProcedureType_t      procedureType,
+    gattProcedureResult_t    procedureResult,
+    bleResult_t              error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcReadUsingCharacteristicUuid_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* Read characteristic value handle */
+                PRINT(aValue[0] | (aValue[1] << 8));
+                deviceNameLength -= 2;
+                
+                /* Read value length */
+                PRINT(deviceNameLength);
+                
+                /* Read data */
+                for ( uint8_t j = 0; j < deviceNameLength; j++)
+                {
+                    PRINT(aValue[2 + j]);
+                }
+            }
+            else
+            {
+                /* Handle error */
+                PRINT(error);
+            }
+            break;
+        /* ... */
+    }
+}
+```
+
+#### 5.1.4.3 特征读取(多个)程序
+
+本程序的API如下：
+
+```c
+bleResult_t GattClient_ReadMultipleCharacteristicValues
+(
+    deviceId_t                deviceId,
+    uint8_t                   cNumCharacteristics,
+    gattCharacteristic_t *    aIoCharacteristics
+);
+```
+
+此程序还允许针对特定情况进行优化，当多个特征（其值为已知的，固定长度）可以在单个ATT事务（通常是单个空中包）中读取时就会发生优化。
+
+应用程序必须知道每个特征的值句柄和值长度。它还必须分别使用上述值写入到 value.handle 和 value.maxValueLength，然后将 value.paValue 字段与大小为 maxValueLength 的已分配数组相链接。
+
+以下示例涉及在单个数据包中读取三个特征。
+
+```c
+#define mcNumCharacteristics_c 3
+
+#define mcChar1Length_c 4
+#define mcChar2Length_c 5
+#define mcChar3Length_c 6
+
+static uint8_t aValue1[mcChar1Length_c];
+static uint8_t aValue2[mcChar2Length_c];
+static uint8_t aValue3[mcChar3Length_c];
+
+static gattCharacteristic_t myChars[mcNumCharacteristics_c];
+
+myChars[0].value.handle = 0x0015;
+myChars[1].value.handle = 0x0025;
+myChars[2].value.handle = 0x0035;
+
+myChars[0].value.maxValueLength = mcChar1Length_c;
+myChars[1].value.maxValueLength = mcChar2Length_c;
+myChars[2].value.maxValueLength = mcChar3Length_c;
+
+myChars[0].value.paValue = aValue1;
+myChars[1].value.paValue = aValue2;
+myChars[2].value.paValue = aValue3;
+
+bleResult_t result = GattClient_ReadMultipleCharacteristicValues
+(
+    deviceId,
+    mcNumCharacteristics_c,
+    myChars
+);
+
+if (gBleSuccess_c != result)
+{
+    /* Handle error */
+}
+```
+
+当触发客户端程序回调时，如果没有发生错误，每个特征值的长度应该等于请求的长度。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t              deviceId,
+    gattProcedureType_t     procedureType,
+    gattProcedureResult_t   procedureResult,
+    bleResult_t             error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcReadMultipleCharacteristicValues_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                for ( uint8_t i = 0; i < mcNumCharacteristics_c; i++)
+                {
+                    /* Read value length */
+                    PRINT(myChars[i].value.valueLength );
+                    /* Read data */
+                    for ( uint8_t j = 0; j < myChars[i].value.valueLength ; j++)
+                    {
+                        PRINT(myChars[i].value.paValue[j]);
+                    }
+                }
+            }
+            else
+            {
+                /* Handle error */
+                PRINT(error);
+            }
+            break;
+
+        /* ... */
+    }
+}
+```
+
+#### 5.1.4.4 特征写入程序
+
+有一个通用的API可用于写入特征值：
+
+```c
+bleResult_t GattClient_WriteCharacteristicValue
+(
+    deviceId_t                deviceId,
+    gattCharacteristic_t *    pCharacteristic,
+    uint16_t                  valueLength,
+    uint8_t *                 aValue,
+    bool_t                    withoutResponse,
+    bool_t                    signedWrite,
+    bool_t                    doReliableLongCharWrites,
+    uint8_t *                 aCsrk
+);
+```
+
+它有许多参数来支持不同组合的特征写入程序。
+
+pCharacteristic 指向的结构仅用于表示特征值句柄的 value.handle 字段。要写入的值包含在大小为 valueLength 的 aValue 数组中。
+
+如果应用程序希望执行无响应写入程序，则可以将 withoutResponse 参数设置为TRUE，该程序转换为ATT写入命令。如果选择此值，则 signedWrite 参数指示是否应对数据进行签名（通过ATT签名写入命令签名写入程序），在这种情况下，aCsrk 参数不能为NULL并包含用于对数据进行签名的 CSRK。否则，将忽略 signedWrite 和 aCsrk。
+
+最后，如果应用程序正在写一个长特征值（由于ATT_MTU限制而需要多个空气包 ）并且希望服务器确认通过空中发送的属性的每个部分，则应将 doReliableLongCharWrites 设置为TRUE。
+
+为简化应用程序代码，定义了以下宏：
+
+```c
+#define GattClient_SimpleCharacteristicWrite(deviceId, pChar, valueLength, aValue) \
+        GattClient_WriteCharacteristicValue \
+        (deviceId, pChar, valueLength, aValue, FALSE, FALSE, FALSE, NULL)
+```
+
+这是写入特征的最简单用法。如果值长度不超过空中数据包的最大值（ATT_MTU - 3），它将发送ATT写请求。否则，它发送带有部分属性的ATT准备写请求，而不检查ATT准备写响应数据的一致性，最后一个ATT会执行写请求。
+
+```c
+#define GattClient_CharacteristicWriteWithoutResponse(deviceId, pChar, valueLength, aValue) \
+        GattClient_WriteCharacteristicValue \
+        (deviceId, pChar, valueLength, aValue, TRUE, FALSE, FALSE, NULL)
+```
+
+此用法发送ATT写命令。此处不允许使用长特征值并触发 gBleInvalidParameter_c 错误。
+
+```c
+#define GattClient_CharacteristicSignedWrite(deviceId, pChar, valueLength, aValue, aCsrk) \
+        GattClient_WriteCharacteristicValue \
+        (deviceId, pChar, valueLength, aValue, TRUE, TRUE, FALSE, aCsrk)
+```
+
+此用法发送ATT签名写命令。必须提供用于签名数据的CSRK。
+
+这是写一个3字节长特征值的简短示例。
+
+```c
+gattCharacteristic_t myChar;
+myChar. value . handle = 0x00A0; /* Or maybe it was previously discovered? */
+
+#define mcValueLength_c 3
+uint8_t aValue[mcValueLength_c] = { 0x01, 0x02, 0x03 };
+
+bleResult_t result = GattClient_SimpleCharacteristicWrite
+(
+    deviceId,
+    &myChar,
+    mcValueLength_c,
+    aValue
+);
+
+if (gBleSuccess_c != result)
+{
+    /* Handle error */
+}
+```
+
+写入完成后会触发客户端程序回调。
+
+```c
+void gattClientProcedureCallback
+(
+    deviceId_t              deviceId,
+    gattProcedureType_t     procedureType,
+    gattProcedureResult_t   procedureResult,
+    bleResult_t             error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcWriteCharacteristicValue_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* Continue */
+            }
+            else
+            {
+               /* Handle error */
+                PRINT(error);
+            }  
+            break;
+        
+        /* ... */
+    }
+}
+```
+
+### 5.1.5 读取和写入特征描述符
+
+为这些程序提供了两个API，它们与特征读写非常相似。
+
+唯一的区别是要 读/写 的属性的句柄是通过指向 gattAttribute_t 结构的指针（与 gattCharacteristic_t.value 字段相同的类型）提供的。
+
+```c
+bleResult_t GattClient_ReadCharacteristicDescriptor
+(
+    deviceId_t           deviceId,
+    gattAttribute_t *    pIoDescriptor,
+    uint16_t             maxReadBytes
+);
+```
+
+pIoDescriptor->handle 是必须的（它可能是由 gattclient_discoverallcharacterticdescriptors 发现的）。GATT模块填充在字段 pIoDescriptor->aValue（必须链接到一个已分配的数组）和 pIoDescriptor->valueLength（数组的大小）中读取的值。
+
+使用此函数也可以类似地执行写入一个描述符：
+
+```c
+bleResult_t GattClient_WriteCharacteristicDescriptor
+(
+    deviceId_t           deviceId,
+    gattAttribute_t *    pDescriptor,
+    uint16_t             valueLength,
+    uint8_t *            aValue
+);
+```
+
+在调用函数前，只有 pDescriptor->handle 是必须被填充的。
+
+最常写的描述符之一是客户端特征配置描述符（CCCD）。它具有明确定义的UUID（gBleSig_CCCD_d）和一个2字节长的值，可以写入以 启用/禁用 通知 和/或 指示。
+
+在以下示例中，将发现特征的描述符并编写其CCCD以激活通知。
+
+```c
+static gattCharacteristic_t myChar;
+myChar. value . handle = 0x00A0; /* Or maybe it was previously discovered? */
+
+#define mcMaxDescriptors_c 5
+static gattAttribute_t aDescriptors[mcMaxDescriptors_c];
+myChar. aDescriptors = aDescriptors;
+
+/* ... */
+
+{
+    bleResult_t result = GattClient_DiscoverAllCharacteristicDescriptors
+    (
+        deviceId,
+        &myChar,
+        0xFFFF,
+        mcMaxDescriptors_c
+    );
+
+    if (gBleSuccess_c != result)
+    {
+        /* Handle error */
+    }
+}
+
+/* ... */
+
+void gattClientProcedureCallback
+(
+    deviceId_t               deviceId,
+    gattProcedureType_t      procedureType,
+    gattProcedureResult_t    procedureResult,
+    bleResult_t              error
+)
+{
+    switch (procedureType)
+    {
+        /* ... */
+        case gGattProcDiscoverAllCharacteristicDescriptors_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* Find CCCD */
+                for ( uint8_t j = 0; j < myChar. cNumDescriptors ; j++)
+                {
+                    if (gBleUuidType16_c == myChar.aDescriptors[j].uuidType
+                        && gBleSig_CCCD_d == myChar.aDescriptors[j].uuid.uuid16 )
+                    {
+                        uint8_t cccdValue[2];
+                        packTwoByteValue(gCccdNotification_c, cccdValue);
+                        bleResult_t result = GattClient_WriteCharacteristicDescriptor
+                        (
+                            deviceId,
+                            &myChar.aDescriptors[j],
+                            2,
+                            cccdValue
+                        );
+
+                        if (gBleSuccess_c != result)
+                        {
+                            /* Handle error */
+                        }
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                /* Handle error */
+                PRINT(error);
+            }
+            break;
+
+        case gGattProcWriteCharacteristicDescriptor_c:
+            if (gGattProcSuccess_c == procedureResult)
+            {
+                /* Notification successfully activated */
+            }
+            else
+            {
+                /* Handle error */
+                PRINT(error);
+            }
+
+        /* ... */
+    }
+}
+```
+
+### 5.1.6 重置程序
+
+要取消正在进行的客户端程序，可以调用以下API：
+
+```c
+bleResult_t GattClient_ResetProcedure (void);
+```
+
+它重置GATT客户端的内部状态，并且可以随时启动新程序。
 
