@@ -59,6 +59,22 @@
 - [6. GATT数据库应用程序接口](#6-gatt%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E6%8E%A5%E5%8F%A3)
     - [6.1 写入和读取属性](#61-%E5%86%99%E5%85%A5%E5%92%8C%E8%AF%BB%E5%8F%96%E5%B1%9E%E6%80%A7)
     - [6.2 查找属性句柄](#62-%E6%9F%A5%E6%89%BE%E5%B1%9E%E6%80%A7%E5%8F%A5%E6%9F%84)
+- [7. 创建GATT数据库](#7-%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)
+    - [7.1 静态创建GATT数据库](#71-%E9%9D%99%E6%80%81%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)
+        - [7.1.1 声明自定义128位UUID](#711-%E5%A3%B0%E6%98%8E%E8%87%AA%E5%AE%9A%E4%B9%89128%E4%BD%8Duuid)
+        - [7.1.2 声明服务](#712-%E5%A3%B0%E6%98%8E%E6%9C%8D%E5%8A%A1)
+            - [7.1.2.1 服务声明宏](#7121-%E6%9C%8D%E5%8A%A1%E5%A3%B0%E6%98%8E%E5%AE%8F)
+            - [7.1.2.2 包含声明宏](#7122-%E5%8C%85%E5%90%AB%E5%A3%B0%E6%98%8E%E5%AE%8F)
+        - [7.1.3 声明特征](#713-%E5%A3%B0%E6%98%8E%E7%89%B9%E5%BE%81)
+            - [7.1.3.1 特征声明宏](#7131-%E7%89%B9%E5%BE%81%E5%A3%B0%E6%98%8E%E5%AE%8F)
+            - [7.1.3.2 声明特征值](#7132-%E5%A3%B0%E6%98%8E%E7%89%B9%E5%BE%81%E5%80%BC)
+            - [7.1.3.3 声明特征描述符](#7133-%E5%A3%B0%E6%98%8E%E7%89%B9%E5%BE%81%E6%8F%8F%E8%BF%B0%E7%AC%A6)
+        - [7.1.4 静态GATT数据库定义示例](#714-%E9%9D%99%E6%80%81gatt%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9A%E4%B9%89%E7%A4%BA%E4%BE%8B)
+    - [7.2 动态创建GATT数据库](#72-%E5%8A%A8%E6%80%81%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)
+        - [7.2.1 初始化和发布](#721-%E5%88%9D%E5%A7%8B%E5%8C%96%E5%92%8C%E5%8F%91%E5%B8%83)
+        - [7.2.2 添加服务](#722-%E6%B7%BB%E5%8A%A0%E6%9C%8D%E5%8A%A1)
+        - [7.2.3 添加特征和描述符](#723-%E6%B7%BB%E5%8A%A0%E7%89%B9%E5%BE%81%E5%92%8C%E6%8F%8F%E8%BF%B0%E7%AC%A6)
+        - [7.2.4 删除服务和特征](#724-%E5%88%A0%E9%99%A4%E6%9C%8D%E5%8A%A1%E5%92%8C%E7%89%B9%E5%BE%81)
 
 
 # 1. 前言
@@ -715,7 +731,7 @@ bleResult_t Gap_StopAdvertising (void);
 
 所有安全检查都由GAP模块内部执行，并自动发送安全错误响应。应用程序开发者需要做的就是注册安全需求。
 
-首先，在构建GATT数据库时（请参阅[创建GATT数据库]()），敏感属性应该在其访问权限中内置安全性（例如，只读/带有身份验证读取/带有身份验证写入/具有授权写入，等等）。
+首先，在构建GATT数据库时（请参阅[创建GATT数据库](#7-%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)），敏感属性应该在其访问权限中内置安全性（例如，只读/带有身份验证读取/带有身份验证写入/具有授权写入，等等）。
 
 其次，如果GATT数据库除了在属性权限中已经指定的安全性之外还需要额外的安全性（例如，某些服务在某些情况下需要更高的安全性），则必须调用以下函数：
 
@@ -1287,9 +1303,9 @@ void gattClientProcedureCallback
 
 #### 5.1.3.3 发现包含的服务
 
-[发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)显示如何发现主要服务。但是，服务器也可能包含辅助服务，这些辅助服务不应单独使用，通常包含在主服务中。包含意味着所有辅助服务的特征都需要主服务的配置文件才可以使用。
+[发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)显示如何发现主要服务。但是，服务器也可能包含次要服务，这些次要服务不应单独使用，通常包含在主服务中。包含意味着所有次要服务的特征都需要主服务的配置文件才可以使用。
 
-因此，在发现主服务后，可以使用以下程序来发现其中包含的服务（通常是辅助服务）：
+因此，在发现主服务后，可以使用以下程序来发现其中包含的服务（通常是次要服务）：
 
 ```c
 bleResult_t GattClient_FindIncludedServices
@@ -2277,7 +2293,7 @@ bleResult_t GattDb_WriteAttribute
 
 值长度必须是有效的，正如创建数据库时定义的那样。否则，将返回 gGattInvalidValueLength_c 错误。
 
-此外，如果数据库是静态创建的，如[创建GATT数据库]()中所述，句柄可以通过枚举成员（在 **gatt_db.h** 中定义了一个友好的名称）引用。
+此外，如果数据库是静态创建的，如[创建GATT数据库](#7-%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)中所述，句柄可以通过枚举成员（在 **gatt_db.h** 中定义了一个友好的名称）引用。
 
 ```c
 bleResult_t GattDb_ReadAttribute
@@ -2334,3 +2350,257 @@ bleResult_t GattDb_FindCccdHandleForCharValueHandle
 ```
 
 ------------------------------------------------------------------------------------------------------------------------
+
+# 7. 创建GATT数据库
+
+GATT数据库包含几个GATT服务，其中每个服务必须包含至少一个GATT特征。
+
+属性数据库包含一组属性。每个属性都有四个字段：
+* 属性手柄 - 一个2字节的数据库索引，从0x0001开始，随着每个新属性的增加而增加，不一定是连续的；最大值为0xFFFF
+* 属性类型或UUID - 一个2字节、4字节或16字节的UUID
+* 属性权限 - 1字节，包含访问标志；这定义了是否可以读取或写入属性的值以及每种操作类型的安全性要求
+* 属性值 - 一个的最大为512个字节的数组
+
+ATT不解释数据库中包含的UUID和值。它只处理基于属性句柄的数据传输。
+
+GATT根据属性的UUID为属性赋予意义，并将它们分组为特征和服务。
+
+有两种可能的方法来定义GATT数据库：在编译时（静态）或在运行时（动态）。
+
+## 7.1 静态创建GATT数据库
+
+为了在编译时定义GATT数据库，GATT_DB API提供了几个宏。这些宏在编译时以许多不同的方式扩展，生成相应的属性数据库，属性协议(ATT)可以在该数据库上运行。
+
+这是定义数据库的默认方式。
+
+GATT数据库定义写在两个文件中，其需要与所有宏扩展文件一起添加到应用程序项目中：
+* **gatt_db.h** - 包含服务和特征的实际声明
+* **gat_uuid128.h** - 包含自定义UUID的声明（16字节宽）；这些UUID被赋予一个用户友好的名称，其用于 **gatt_db.h** 文件以替换全部16字节序列
+
+### 7.1.1 声明自定义128位UUID
+
+所有的自定义128位UUID都在必需的文件 **gatt_uuid128.h** 中声明。
+
+这个文件中的每一行都包含一个UUID声明。声明使用以下宏：
+* UUID128 (name, byte1, byte2, …, byte16)
+
+name 参数是用户友好的句柄，其在 **gatt_db.h** 文件中引用这个UUID。
+
+16个字节以LSB优先顺序写入，每个使用0xZZ格式。
+
+> NOTE：在某些情况下，它期望重用 **gatt_uuid128.h** 中声明的128位UUID。16字节数组可通过其友好名称获得，并可通过在应用程序中包含 **gatt_db_handles.h** 来访问。强烈建议仅在只读操作中使用它。例如：
+
+```c
+(gatt_uuid128.h)
+UID128(uuid_service_wireless_uart, 0xE0, 0x1C, 0x4B, 0x5E, 0x1E, 0xEB, 0xA1, 0x5C, 0xEE, 0xF4,
+0x5E, 0xBA, 0x00, 0x01, 0xFF, 0x01)
+
+(app.c)
+#include "gatt_db_handles.h"
+........
+/* Start Service Discovery*/
+BleServDisc_FindService(peerDeviceId, gBleUuidType128_c, (bleUuid_t*)
+&uuid_service_wireless_uart);
+```
+
+### 7.1.2 声明服务
+
+有两种类型的服务：
+* 主要服务
+* 次要服务 - 这些服务只包括在其他主要或次要服务中
+
+服务声明属性有一个UUID，其由Bluetooth SIG定义：
+* 0x2800 a.k.a. <Primary Service> - 用于主要服务声明
+* 0x2801 a.k.a. <Secondary Service> - 用于次要服务声明
+
+服务声明属性权限是只读的，不需要身份验证。服务声明属性值包含服务UUID。服务范围从服务声明开始到下一个服务声明结束。在服务范围内声明的所有特征都被视为属于该服务。
+
+#### 7.1.2.1 服务声明宏
+
+以下宏将用于声明服务：
+* PRIMARY_SERVICE (name, uuid16)
+    * 最常用的
+    * name 参数对所有宏都是通用的；它是生成的属性的通用用户友好的标识符
+    * uuid16 是一个2字节的SIG定义的UUID，以0xZZZZ格式写入
+* PRIMARY_SERVICE_UUID32 (name, uuid32)
+    * 该宏是一个4字节的SIG定义的UUID，以0xZZZZZZZZ格式写入
+* PRIMARY_SERVICE_UUID128 (name, uuid128)
+    * uuid128 是在 **gatt_uuid128.h** 文件中自定义UUID的友好名称
+* SECONDARY _SERVICE (name, uuid16)
+* SECONDARY_SERVICE_UUID32 (name, uuid32)
+* SECONDARY _SERVICE_UUID128 (name, uuid128)
+    * 这三个都与主要服务声明类似
+
+#### 7.1.2.2 包含声明宏
+
+次要服务由其他服务（通常是主要服务）包括在内。主要服务也可能包含其他主要服务。包含是使用包含声明宏完成的：
+* INCLUDE (service_name)
+    * service_name 参数是用于声明次要服务的友好名称
+    * 此宏仅用于具有SIG定义的2字节服务UUID的辅助服务
+* INCLUDE_CUSTOM (service_name)
+    * 此宏用于具有4字节UUID或16字节UUID的辅助服务
+
+服务包含的效果是包含服务被认为包含所包含服务的所有特征。
+
+### 7.1.3 声明特征
+
+必须仅在服务内声明特征。特征属于最近声明的服务，因此GATT数据库必须始终以服务声明开始。
+
+特征声明属性具有以下UUID，由Bluetooth SIG定义：
+* 0x2803 a.k.a. <Characteristic>
+
+特征声明属性的权限是：只读，不需要身份验证。
+
+特征声明属性值包含：
+* 特征UUID
+* 特征值的声明句柄
+* 特征特性 - 读、写、通知，等等（1个字节的标志）
+  
+特征范围从特征声明开始直到下一个新特征或服务声明结束。
+
+如下这些在特征声明后：
+* 特征值声明（强制性的；在特征声明之后）
+* 零或多个特征描述符声明
+
+#### 7.1.3.1 特征声明宏
+
+以下宏用于声明特征：
+* CHARACTERISTIC (name, uuid16, properties)
+* CHARACTERISTIC_UUID32 (name, uuid32, properties)
+* CHARACTERISTIC _UUID128 (name, uuid128,properties)
+    * 有关uuidXXX参数说明，请参阅服务声明
+
+properties 参数是位掩码。标志在 gattcharactertiesbitfields_t 中定义。
+
+#### 7.1.3.2 声明特征值
+
+特征值声明紧跟在特征声明之后，并使用以下宏之一：
+* VALUE (name, uuid16, permissions, valueLength, valueByte1, valueByte2, …)
+* VALUE_UUID32 (name, uuid32, permissions, valueLength, valueByte1, valueByte2, …)
+* VALUE _UUID128(name, uuid128, permissions, valueLength, valueByte1, valueByte2, …)
+    * 有关uuidXXX参数说明，请参阅服务声明
+    * permissions 参数是位掩码；标志在 gattAttributePermissionsBitFields_t 中定义
+        * valueLength 是特征值要分配的字节数。在此参数之后，应有相同字节数的字节数组以0xZZ格式来表示此特征的初始值
+
+这些宏用于声明固定长度的特征值。
+
+某些特征具有可变长度值。对于那些特征，使用以下宏：
+* VALUE_VARLEN (name, uuid16, permissions, maximumValueLength, initialValueLength, valueByte1, valueByte2, …)
+* VALUE_UUID32_VARLEN (name, uuid32, permissions, maximumValueLength, initialValueLength, valueByte1, valueByte2, …)
+* VALUE_UUID128_VARLEN (name, uuid128, permissions, maximumValueLength, initialValueLength, valueByte1, valueByte2, …)
+    * 为此特征值分配的字节数为 maximumValueLength
+    * valueByteXXX 参数的数量应等于 initialValueLength
+
+显然，initialValueLength 最多等于 maximumValueLength。
+
+#### 7.1.3.3 声明特征描述符
+
+特征的描述符在特征值声明之后和下一个特征声明之前声明。
+
+用于声明特征描述符的宏与用于声明固定长度特征值的宏非常相似：
+* DESCRIPTOR (name, uuid16, permissions, descriptorValueLength, descriptorValueByte1, descriptorValueByte2, …)
+* DESCRIPTOR_UUID32 (name, uuid32, permissions, descriptorValueLength, descriptorValueByte1, descriptorValueByte2, …)
+* DESCRIPTOR_UUID128(name, uuid128, permissions, descriptorValueLength, descriptorValueByte1, descriptorValueByte2, …)
+
+经常使用的特殊特征描述符是客户端特征配置描述符（CCCD）。这是客户端写入一些位以激活服务器通知 和/或 指示的描述符。它有一个保留的2字节的SIG定义的UUID（0x2902），其属性值仅包含1个字节（其中2个位用于配置，其余6个位保留）。
+
+由于CCCD经常出现在标准BLE配置文件的特征定义中，因此使用特殊的宏来进行CCCD声明：
+* CCCD (name)
+
+这个简单的宏基本上等同于以下描述符声明：
+
+```c
+DESCRIPTOR (name, 0x2902, (gGattAttPermAccessReadable_c | gGattAttPermAccessWritable_c), 2, 0x00, 0x00)
+```
+
+### 7.1.4 静态GATT数据库定义示例
+
+GAP服务必须出现在任何GATT数据库中。它的服务UUID等于0x1800 <GAP Service>，并且它包含三个只读特征，无需认证：设备名称，外观和外设首选连接参数。这些在SIG文档中也有明确定义的UUID。
+
+此服务的定义如下所示：
+
+```c
+PRIMARY_SERVICE(service_gap, 0x1800)
+
+    CHARACTERISTIC(char_device_name, 0x2A00, (gGattCharPropRead_c) )
+        VALUE(value_device_name, 0x2A00, (gGattAttPermAccessReadable_c), 6, “Sensor”)
+
+    CHARACTERISTIC(char_appearance, 0x2A01, (gGattCharPropRead_c) )
+        VALUE(value_appearance, 0x2A01, (gGattAttPermAccessReadable_c), 2, 0xC2, 0x03)
+
+    CHARACTERISTIC(char_ppcp, 0x2A04, (gGattCharPropRead_c) )
+        VALUE(value_ppcp, 0x2A04, (gGattAttPermAccessReadable_c), 8, 0x0A, 0x00, 0x10, 0x00, 0x64, 0x00, 0xE2, 0x04)
+```
+
+另一个经常遇到的服务是扫描参数服务：
+
+```c
+PRIMARY_SERVICE(service_scan_parameters, 0x1813)
+
+    CHARACTERISTIC(char_scan_interval_window, 0x2A4F, (gGattCharPropWriteWithoutRsp_c) )
+        VALUE(value_scan_interval_window, 0x2A4F, (gGattAttPermAccessWritable), 4, 0x00, 0x00, 0x00, 0x00)
+
+    CHARACTERISTIC(char_scan_refresh, 0x2A31, (gGattCharPropRead_c | gGattCharPropNotify_c) )
+        VALUE(value_scan_refresh, 0x2A31, (gGattAttPermAccessReadable_c), 1, 0x00)
+        CCCD(cccd_scan_refresh)
+```
+
+> NOTE：声明中给出的所有“用户友好”名称都静态定义为枚举成员，在数值上等于声明的属性句柄。这意味着如果 **gatt_db_handles.h** 包含在应用程序源文件中，那么在需要属性句柄的任何地方都可以使用其中一个名称作为函数的参数。例如，要从应用程序级代码中写入“扫描刷新特征”的值，请使用以下指令：
+
+```c
+#include "gatt_db_handles.h"
+...
+uint8_t scan_refresh_value = 0x12;
+GattDb_WriteAttribute( char_scan_refresh, &scan_refresh_value, 1);
+```
+
+## 7.2 动态创建GATT数据库
+
+要在运行时定义GATT数据库，必须在 **app_preinclude.h** 中定义 **gGattDbDynamic_d** 宏，其值等于1。
+
+然后，应用程序必须使用 **gatt_db_dynamic.h** 接口提供的API来根据需要添加和删除服务和特征。
+
+有关服务和特征参数的详细说明，请参见第7.1节。
+
+### 7.2.1 初始化和发布
+
+在将任何内容添加到数据库之前，必须使用一个空属性集合对其进行初始化。
+
+GattDbDynamic_Init() API的自动调用由 **gatt_database.c** 源文件中的 GattDb_Init() 提供实现。应用程序特定的代码（例如，**app.c** 中的代码）不需要再次调用此API，除非在某些时候它使用 GattDb_ReleaseDatabase() 破坏了数据库。
+
+### 7.2.2 添加服务
+
+可用于添加服务的API是自解释的：
+* GattDbDynamic_AddPrimaryServiceDeclaration
+    * 服务UUID被指定为参数
+* GattDbDynamic_AddSecondaryServiceDeclaration
+    * 服务UUID被指定为参数
+* GattDbDynamic_AddIncludeDeclaration
+    * 服务UUID和句柄范围被指定为参数
+
+这些函数有一个可选的输出参数 pOutHandle。如果其值不为NULL，则执行会在指向添加的声明的属性句柄的指向位置写入一个16位值。
+
+应用程序可以将此句柄用作某些 GattDbApp API或服务删除函数中的参数。
+
+在任何特征之前至少需要添加一个服务。
+
+### 7.2.3 添加特征和描述符
+
+用于添加特征和描述符的API列举如下：
+* GattDbDynamic_AddCharacteristicDeclarationAndValue
+    * 特征UUID，特性，访问权限和初始值被指定为参数
+* GattDbDynamic_AddCharacteristicDeclarationWithUniqueValue
+    * 对此API的多个调用分配了一个唯一的512字节值缓冲区作为应用程序的优化（该应用程序处理不总是需要单独存储的大值缓冲区）
+* GattDbDynamic_AddCharacteristicDescriptor
+    * 描述符UUID，访问权限和初始值被指定为参数
+* GattDbDynamic_AddCccd
+    * CCCD的快捷方式
+
+### 7.2.4 删除服务和特征
+
+要删除服务或特性，可以使用以下API，这两个API都只需要声明句柄作为参数：
+* GattDbDynamic_RemoveService
+* GattDbDynamic_RemoveCharacteristic
+
+------------------------------------------------------------------------------------------------------------------------
+
