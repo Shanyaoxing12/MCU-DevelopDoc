@@ -52,6 +52,10 @@
             - [5.1.4.4 特征写入程序](#5144-%E7%89%B9%E5%BE%81%E5%86%99%E5%85%A5%E7%A8%8B%E5%BA%8F)
         - [5.1.5 读取和写入特征描述符](#515-%E8%AF%BB%E5%8F%96%E5%92%8C%E5%86%99%E5%85%A5%E7%89%B9%E5%BE%81%E6%8F%8F%E8%BF%B0%E7%AC%A6)
         - [5.1.6 重置程序](#516-%E9%87%8D%E7%BD%AE%E7%A8%8B%E5%BA%8F)
+    - [5.2 服务器API](#52-%E6%9C%8D%E5%8A%A1%E5%99%A8api)
+        - [5.2.1 服务器回调](#521-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%9B%9E%E8%B0%83)
+        - [5.2.2 发送通知和指示](#522-%E5%8F%91%E9%80%81%E9%80%9A%E7%9F%A5%E5%92%8C%E6%8C%87%E7%A4%BA)
+        - [5.2.3 属性写入通知](#523-%E5%B1%9E%E6%80%A7%E5%86%99%E5%85%A5%E9%80%9A%E7%9F%A5)
 
 
 # 1. 前言
@@ -1075,7 +1079,7 @@ if (gBleSuccess_c != result)
 }
 ```
 
-本地设备支持的最大ATT_MTU的值不必包含在请求中，因为它是静态的。它在 **ble_constants.h** 文件中以名称 gAttMaxMtu_c 定义。在GATT内部实现，ATT Exchange MTU 请求（和服务器的响应）使用该值。
+本地设备支持的最大ATT_MTU的值不必包含在请求中，因为它是静态的。它在 **ble_constants.h** 文件中以名称 gAttMaxMtu_c 定义。在GATT内部实现，ATT交换MTU请求（和服务器的响应）使用该值。
 
 交换完成后，客户端回调通过 gGattProcExchangeMtu_c 程序类型触发。
 
@@ -2121,3 +2125,126 @@ bleResult_t GattClient_ResetProcedure (void);
 
 它重置GATT客户端的内部状态，并且可以随时启动新程序。
 
+## 5.2 服务器API
+
+一旦创建了GATT数据库并且已使用 Gap_RegisterDeviceSecurityRequirements 注册了所需的安全设置，所有ATT请求、命令和属性访问安全性检查都由GATT服务器模块内部处理。
+
+除了这种自动功能外，应用程序还可以使用GATT服务器API来发送通知和指示，并且可以选择性地拦截客户端某些尝试写入的属性。
+
+### 5.2.1 服务器回调
+
+第一个GATT服务器调用是服务器回调的安装，它有以下原型
+
+```c
+typedef void (* gattServerCallback_t )
+(
+    deviceId_t              deviceId,     /*!< Device ID identifying the active connection. */
+    gattServerEvent_t *     pServerEvent  /*!< Server event. */
+);
+```
+
+可以使用以下API安装回调：
+
+```c
+bleResult_t GattServer_RegisterCallback
+(
+    gattServerCallback_t callback
+);
+```
+
+gattServerEvent_t 结构的第一个成员是 eventType，它是一个具有以下可能值的枚举类型：
+* gEvtMtuChanged_c：表示客户端启动的MTU交换程序已成功完成且ATT_MTU已增加。事件数据包含ATT_MTU的新值。应用程序流是否可能依赖于ATT_MTU的值，例如，可能存在针对不同ATT_MTU范围的特定优化。如果在此程序中未更改ATT_MTU，则不会触发此事件
+* gEvtHandleValueConfirmation_c：在服务器发送指示后，从客户端收到的确认
+* gEvtAttributeWritten_c，gEvtAttributeWrittenWithoutResponse_c：请参阅[属性写入通知](#523-%E5%B1%9E%E6%80%A7%E5%86%99%E5%85%A5%E9%80%9A%E7%9F%A5)
+* gEvtCharacteristicCccdWritten_c：客户端写入了一个CCCD。应用程序应使用 Gap_SaveCccd 保存绑定设备的CCCD值
+* gEvtError_c：服务器启动程期间发生错误
+
+### 5.2.2 发送通知和指示
+
+为这些服务器启动操作提供的API非常相似：
+
+```c
+bleResult_t GattServer_SendNotification
+(
+    deviceId_t deviceId,
+    uint16_t handle
+);
+bleResult_t GattServer_SendIndication
+(
+    deviceId_t deviceId,
+    uint16_t q handle
+);
+```
+
+只需要为这些函数提供属性句柄。属性值会自动从GATT数据库中检索到。
+
+请注意，应用程序开发者的责任是通过写入相应的CCCD值来检查 deviceId 指定的客户端是否先前已激活 通知/指示。为此，应使用以下GAP API：
+
+```c
+bleResult_t Gap_CheckNotificationStatus
+(
+    deviceId_t   deviceId,
+    uint16_t     handle,
+    bool_t *     pOutIsActive
+);
+bleResult_t Gap_CheckIndicationStatus
+(
+    deviceId_t   deviceId,
+    uint16_t     handle,
+    bool_t *     pOutIsActive
+);
+```
+
+> NOTE：必须将这两个函数与 Gap_SaveCccd 一起仅用于绑定设备，因为数据保存在NVM中并在重新连接时重新加载。对于不绑定的设备，应用程序也可以使用自己的簿记机制。
+
+发送通知和指示之间有一个重要的区别：后者一次只能发送一个，并且应用程序必须在发送新指示之前等待客户端确认（由 gEvtHandleValueConfirmation_c 服务器事件或由带有 gGattClientConfirmationTimeout_c 错误代码的 gEvtError_c 事件发出的信号）。否则，将触发带有 gGattIndicationAlreadyInProgress_c 错误代码的 gEvtError_c 事件 。通知可以连续发送。
+
+### 5.2.3 属性写入通知
+
+当GATT客户端 从/向 服务器的GATT数据库读取和写入值时，它使用ATT请求。
+
+GATT服务器模块实现管理这些请求，并根据数据库安全设置和客户端的安全状态（已验证身份，已授权等）自动发送ATT响应，而不通知应用程序。
+
+然而，在某些情况下需要通知应用程序ATT数据包交换。例如，许多标准配置文件为某些服务定义了一些所谓的控制点特征。这些特征的价值仅对应用程序具有直接意义。写入这些特征通常会触发特定的动作。
+
+例如，考虑一个虚构的智能灯。它在外设角色中具有BLE连通性，它包含一个具有灯服务（以及其他服务）的小型GATT数据库。灯服务包含两个特性：灯状态特性（LSC）和灯动作特性（LAC）。
+
+LSC是具有读写属性的“普通”特性。它的值为0，灯灭，或1，灯亮。写入该值可将灯设置为所需状态。读取它提供了当前状态，这仅在远程传递信息时有用。
+
+LAC只有一个属性，Write Without Response。用户可以使用不带响应写入程序仅写入值0x01（所有其他值都无效）。每当用户在LAC中写入0x01时，灯将切换其状态。
+
+由于以下原因，LAC是控制点特征的一个很好的例子：
+* 写入某个值（在这种情况下为0x01）会触发灯泡上的操作
+* 用户写入的值仅具有直接意义（“0x01切换灯”），并且该值以后不会再次使用。因此，它不需要存储在数据库中
+
+显然，无论何时写入控制点特征，都必须通知应用程序以触发某些应用程序特定的动作。
+
+GATT服务器允许应用程序将一个属性句柄集合注册为“write-notifiable”，换句话说，每当对端客户端写入这些属性中的任何一个时，应用程序都希望接收到事件。
+
+GATT数据库中的所有控制点特征都必须注册其值句柄。实际上，应用程序可以使用以下API为其自身目的注册任何其他句柄以进行写入通知：
+
+```c
+bleResult_t GattServer_RegisterHandlesForWriteNotifications
+(
+    uint8_t      handleCount,
+    uint16_t *   aAttributeHandles
+);
+```
+
+handleCount 是 aAttributeHandles 数组的大小并且它不能超过 gcGattMaxHandleCountForWriteNotifications_c。
+
+使用此函数注册属性句柄后，每当客户端尝试写入其值时，将使用以下事件类型之一触发GATT服务器回调：
+* gEvtAttributeWritten_c：当使用写入程序（ATT写入请求）写入属性时触发。在这种情况下，应用程序必须确定写入的值是否有效和是否必须在数据库中写入，如果是，应用程序必须使用 GattDb_WriteAttribute 写入值，请参阅第6章。此时，GATT服务器模块不会通过OTA自动发送ATT写响应。相反，它等待应用程序调用此函数：
+    ```c
+    bleResult_t GattServer_SendAttributeWrittenStatus
+    (
+        deviceId_t   deviceId,
+        uint16_t     attributeHandle,
+        uint8_t      status
+    );
+    ```
+    status 参数的值被解释为ATT错误代码。如果值有效且应用程序成功处理，则它必须等于 gAttErrCodeNoError_c（0x00）。否则，它必须等于配置文件特定的错误代码（在区间0xE0-0xFF中）或应用程序特定的错误代码（在区间0x80-0x9F中）
+* gEvtAttributeWrittenWithoutResponse_c：当使用不带响应写入程序（ATT写入命令）写入属性时触发。由于此程序不需要响应，因此应用程序可以处理它，并在必要时将其写入数据库。无论该值是否有效，都不需要应用程序的响应
+* gEvtLongCharacteristicWritten_c：当客户端已完成写入长特征值时触发。事件数据包括特征值属性的句柄和指向数据库中其值的指针
+
+------------------------------------------------------------------------------------------------------------------------
