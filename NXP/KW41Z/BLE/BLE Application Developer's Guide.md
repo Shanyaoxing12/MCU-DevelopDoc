@@ -1,84 +1,102 @@
-# **Bluetooth® Low Energy Application Developer’s Guide**
+# **Bluetooth® Low Energy Application Developer’s Guide** <!-- omit in toc -->
 
-- [**Bluetooth® Low Energy Application Developer’s Guide**](#bluetooth%C2%AE-low-energy-application-developers-guide)
-- [1. 前言](#1-%E5%89%8D%E8%A8%80)
-- [2. 先决条件](#2-%E5%85%88%E5%86%B3%E6%9D%A1%E4%BB%B6)
-    - [2.1 RTOS任务队列和事件](#21-rtos%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6)
-    - [2.2 GATT数据库](#22-gatt%E6%95%B0%E6%8D%AE%E5%BA%93)
-    - [2.3 非易失性内存(NVM)访问](#23-%E9%9D%9E%E6%98%93%E5%A4%B1%E6%80%A7%E5%86%85%E5%AD%98nvm%E8%AE%BF%E9%97%AE)
-- [3. 主机栈初始化和API](#3-%E4%B8%BB%E6%9C%BA%E6%A0%88%E5%88%9D%E5%A7%8B%E5%8C%96%E5%92%8Capi)
-    - [3.1 主机任务初始化](#31-%E4%B8%BB%E6%9C%BA%E4%BB%BB%E5%8A%A1%E5%88%9D%E5%A7%8B%E5%8C%96)
-    - [3.2 初始化主机的主要函数](#32-%E5%88%9D%E5%A7%8B%E5%8C%96%E4%B8%BB%E6%9C%BA%E7%9A%84%E4%B8%BB%E8%A6%81%E5%87%BD%E6%95%B0)
-    - [3.3 HCI出入点](#33-hci%E5%87%BA%E5%85%A5%E7%82%B9)
-    - [3.4 主机栈库和API可用性](#34-%E4%B8%BB%E6%9C%BA%E6%A0%88%E5%BA%93%E5%92%8Capi%E5%8F%AF%E7%94%A8%E6%80%A7)
-    - [3.5 同步和异步函数](#35-%E5%90%8C%E6%AD%A5%E5%92%8C%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0)
-    - [3.6 无线发射功率级别](#36-%E6%97%A0%E7%BA%BF%E5%8F%91%E5%B0%84%E5%8A%9F%E7%8E%87%E7%BA%A7%E5%88%AB)
-- [4. 通用访问配置文件(GAP)层](#4-%E9%80%9A%E7%94%A8%E8%AE%BF%E9%97%AE%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6gap%E5%B1%82)
-    - [4.1 中央设置](#41-%E4%B8%AD%E5%A4%AE%E8%AE%BE%E7%BD%AE)
-        - [4.1.1 扫描](#411-%E6%89%AB%E6%8F%8F)
-        - [4.1.2 发起和关闭连接](#412-%E5%8F%91%E8%B5%B7%E5%92%8C%E5%85%B3%E9%97%AD%E8%BF%9E%E6%8E%A5)
-        - [4.1.3 配对和绑定](#413-%E9%85%8D%E5%AF%B9%E5%92%8C%E7%BB%91%E5%AE%9A)
-    - [4.2 外设](#42-%E5%A4%96%E8%AE%BE)
-        - [4.2.1 广告](#421-%E5%B9%BF%E5%91%8A)
-        - [4.2.2 配对和绑定](#422-%E9%85%8D%E5%AF%B9%E5%92%8C%E7%BB%91%E5%AE%9A)
-    - [4.3 LE数据包长度扩展](#43-le%E6%95%B0%E6%8D%AE%E5%8C%85%E9%95%BF%E5%BA%A6%E6%89%A9%E5%B1%95)
-    - [4.4 增强型隐私特性](#44-%E5%A2%9E%E5%BC%BA%E5%9E%8B%E9%9A%90%E7%A7%81%E7%89%B9%E6%80%A7)
-        - [4.4.1 简介](#441-%E7%AE%80%E4%BB%8B)
-            - [4.4.1.1 可解析私有地址](#4411-%E5%8F%AF%E8%A7%A3%E6%9E%90%E7%A7%81%E6%9C%89%E5%9C%B0%E5%9D%80)
-            - [4.4.1.2 非可解析私有地址](#4412-%E9%9D%9E%E5%8F%AF%E8%A7%A3%E6%9E%90%E7%A7%81%E6%9C%89%E5%9C%B0%E5%9D%80)
-            - [4.4.1.3 多重身份解析密钥](#4413-%E5%A4%9A%E9%87%8D%E8%BA%AB%E4%BB%BD%E8%A7%A3%E6%9E%90%E5%AF%86%E9%92%A5)
-        - [4.4.2 主机隐私](#442-%E4%B8%BB%E6%9C%BA%E9%9A%90%E7%A7%81)
-        - [4.4.3 控制器隐私](#443-%E6%8E%A7%E5%88%B6%E5%99%A8%E9%9A%90%E7%A7%81)
-            - [4.4.3.1 扫描和启动](#4431-%E6%89%AB%E6%8F%8F%E5%92%8C%E5%90%AF%E5%8A%A8)
-            - [4.4.3.2 广告](#4432-%E5%B9%BF%E5%91%8A)
-            - [4.4.3.3 连接](#4433-%E8%BF%9E%E6%8E%A5)
-- [5. 通用属性配置文件(GATT)层](#5-%E9%80%9A%E7%94%A8%E5%B1%9E%E6%80%A7%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6gatt%E5%B1%82)
-    - [5.1 客户端API](#51-%E5%AE%A2%E6%88%B7%E7%AB%AFapi)
-        - [5.1.1 安装客户端回调](#511-%E5%AE%89%E8%A3%85%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%9B%9E%E8%B0%83)
-            - [5.1.1.1 客户端程序回调](#5111-%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%A8%8B%E5%BA%8F%E5%9B%9E%E8%B0%83)
-            - [5.1.1.2 通知和指示回调](#5112-%E9%80%9A%E7%9F%A5%E5%92%8C%E6%8C%87%E7%A4%BA%E5%9B%9E%E8%B0%83)
-        - [5.1.2 MTU交换](#512-mtu%E4%BA%A4%E6%8D%A2)
-        - [5.1.3 服务和特征发现](#513-%E6%9C%8D%E5%8A%A1%E5%92%8C%E7%89%B9%E5%BE%81%E5%8F%91%E7%8E%B0)
-            - [5.1.3.1 发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)
-            - [5.1.3.2 发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)
-            - [5.1.3.3 发现包含的服务](#5133-%E5%8F%91%E7%8E%B0%E5%8C%85%E5%90%AB%E7%9A%84%E6%9C%8D%E5%8A%A1)
-            - [5.1.3.4 发现服务的所有特征](#5134-%E5%8F%91%E7%8E%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E6%89%80%E6%9C%89%E7%89%B9%E5%BE%81)
-            - [5.1.3.5 发现特征(通过UUID)](#5135-%E5%8F%91%E7%8E%B0%E7%89%B9%E5%BE%81%E9%80%9A%E8%BF%87uuid)
-            - [5.1.3.6 发现特征描述符](#5136-%E5%8F%91%E7%8E%B0%E7%89%B9%E5%BE%81%E6%8F%8F%E8%BF%B0%E7%AC%A6)
-        - [5.1.4 读取和写入特征](#514-%E8%AF%BB%E5%8F%96%E5%92%8C%E5%86%99%E5%85%A5%E7%89%B9%E5%BE%81)
-            - [5.1.4.1 特征值读取程序](#5141-%E7%89%B9%E5%BE%81%E5%80%BC%E8%AF%BB%E5%8F%96%E7%A8%8B%E5%BA%8F)
-            - [5.1.4.2 特征读取(通过UUID)程序](#5142-%E7%89%B9%E5%BE%81%E8%AF%BB%E5%8F%96%E9%80%9A%E8%BF%87uuid%E7%A8%8B%E5%BA%8F)
-            - [5.1.4.3 特征读取(多个)程序](#5143-%E7%89%B9%E5%BE%81%E8%AF%BB%E5%8F%96%E5%A4%9A%E4%B8%AA%E7%A8%8B%E5%BA%8F)
-            - [5.1.4.4 特征写入程序](#5144-%E7%89%B9%E5%BE%81%E5%86%99%E5%85%A5%E7%A8%8B%E5%BA%8F)
-        - [5.1.5 读取和写入特征描述符](#515-%E8%AF%BB%E5%8F%96%E5%92%8C%E5%86%99%E5%85%A5%E7%89%B9%E5%BE%81%E6%8F%8F%E8%BF%B0%E7%AC%A6)
-        - [5.1.6 重置程序](#516-%E9%87%8D%E7%BD%AE%E7%A8%8B%E5%BA%8F)
-    - [5.2 服务器API](#52-%E6%9C%8D%E5%8A%A1%E5%99%A8api)
-        - [5.2.1 服务器回调](#521-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%9B%9E%E8%B0%83)
-        - [5.2.2 发送通知和指示](#522-%E5%8F%91%E9%80%81%E9%80%9A%E7%9F%A5%E5%92%8C%E6%8C%87%E7%A4%BA)
-        - [5.2.3 属性写入通知](#523-%E5%B1%9E%E6%80%A7%E5%86%99%E5%85%A5%E9%80%9A%E7%9F%A5)
-- [6. GATT数据库应用程序接口](#6-gatt%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E6%8E%A5%E5%8F%A3)
-    - [6.1 写入和读取属性](#61-%E5%86%99%E5%85%A5%E5%92%8C%E8%AF%BB%E5%8F%96%E5%B1%9E%E6%80%A7)
-    - [6.2 查找属性句柄](#62-%E6%9F%A5%E6%89%BE%E5%B1%9E%E6%80%A7%E5%8F%A5%E6%9F%84)
-- [7. 创建GATT数据库](#7-%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)
-    - [7.1 静态创建GATT数据库](#71-%E9%9D%99%E6%80%81%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)
-        - [7.1.1 声明自定义128位UUID](#711-%E5%A3%B0%E6%98%8E%E8%87%AA%E5%AE%9A%E4%B9%89128%E4%BD%8Duuid)
-        - [7.1.2 声明服务](#712-%E5%A3%B0%E6%98%8E%E6%9C%8D%E5%8A%A1)
-            - [7.1.2.1 服务声明宏](#7121-%E6%9C%8D%E5%8A%A1%E5%A3%B0%E6%98%8E%E5%AE%8F)
-            - [7.1.2.2 包含声明宏](#7122-%E5%8C%85%E5%90%AB%E5%A3%B0%E6%98%8E%E5%AE%8F)
-        - [7.1.3 声明特征](#713-%E5%A3%B0%E6%98%8E%E7%89%B9%E5%BE%81)
-            - [7.1.3.1 特征声明宏](#7131-%E7%89%B9%E5%BE%81%E5%A3%B0%E6%98%8E%E5%AE%8F)
-            - [7.1.3.2 声明特征值](#7132-%E5%A3%B0%E6%98%8E%E7%89%B9%E5%BE%81%E5%80%BC)
-            - [7.1.3.3 声明特征描述符](#7133-%E5%A3%B0%E6%98%8E%E7%89%B9%E5%BE%81%E6%8F%8F%E8%BF%B0%E7%AC%A6)
-        - [7.1.4 静态GATT数据库定义示例](#714-%E9%9D%99%E6%80%81gatt%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9A%E4%B9%89%E7%A4%BA%E4%BE%8B)
-    - [7.2 动态创建GATT数据库](#72-%E5%8A%A8%E6%80%81%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)
-        - [7.2.1 初始化和发布](#721-%E5%88%9D%E5%A7%8B%E5%8C%96%E5%92%8C%E5%8F%91%E5%B8%83)
-        - [7.2.2 添加服务](#722-%E6%B7%BB%E5%8A%A0%E6%9C%8D%E5%8A%A1)
-        - [7.2.3 添加特征和描述符](#723-%E6%B7%BB%E5%8A%A0%E7%89%B9%E5%BE%81%E5%92%8C%E6%8F%8F%E8%BF%B0%E7%AC%A6)
-        - [7.2.4 删除服务和特征](#724-%E5%88%A0%E9%99%A4%E6%9C%8D%E5%8A%A1%E5%92%8C%E7%89%B9%E5%BE%81)
-- [8. 创建自定义配置文件](#8-%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
-    - [8.1 定义自定义UUID](#81-%E5%AE%9A%E4%B9%89%E8%87%AA%E5%AE%9A%E4%B9%89uuid)
-    - [8.2 创建服务功能](#82-%E5%88%9B%E5%BB%BA%E6%9C%8D%E5%8A%A1%E5%8A%9F%E8%83%BD)
-    - [8.3 GATT客户端交互](#83-gatt%E5%AE%A2%E6%88%B7%E7%AB%AF%E4%BA%A4%E4%BA%92)
+- [1. 前言](#1-前言)
+- [2. 先决条件](#2-先决条件)
+    - [2.1 RTOS任务队列和事件](#21-rtos任务队列和事件)
+    - [2.2 GATT数据库](#22-gatt数据库)
+    - [2.3 非易失性内存(NVM)访问](#23-非易失性内存nvm访问)
+- [3. 主机栈初始化和API](#3-主机栈初始化和api)
+    - [3.1 主机任务初始化](#31-主机任务初始化)
+    - [3.2 初始化主机的主要函数](#32-初始化主机的主要函数)
+    - [3.3 HCI出入点](#33-hci出入点)
+    - [3.4 主机栈库和API可用性](#34-主机栈库和api可用性)
+    - [3.5 同步和异步函数](#35-同步和异步函数)
+    - [3.6 无线发射功率级别](#36-无线发射功率级别)
+- [4. 通用访问配置文件(GAP)层](#4-通用访问配置文件gap层)
+    - [4.1 中央设置](#41-中央设置)
+        - [4.1.1 扫描](#411-扫描)
+        - [4.1.2 发起和关闭连接](#412-发起和关闭连接)
+        - [4.1.3 配对和绑定](#413-配对和绑定)
+    - [4.2 外设](#42-外设)
+        - [4.2.1 广告](#421-广告)
+        - [4.2.2 配对和绑定](#422-配对和绑定)
+    - [4.3 LE数据包长度扩展](#43-le数据包长度扩展)
+    - [4.4 增强型隐私特性](#44-增强型隐私特性)
+        - [4.4.1 简介](#441-简介)
+            - [4.4.1.1 可解析私有地址](#4411-可解析私有地址)
+            - [4.4.1.2 非可解析私有地址](#4412-非可解析私有地址)
+            - [4.4.1.3 多重身份解析密钥](#4413-多重身份解析密钥)
+        - [4.4.2 主机隐私](#442-主机隐私)
+        - [4.4.3 控制器隐私](#443-控制器隐私)
+            - [4.4.3.1 扫描和启动](#4431-扫描和启动)
+            - [4.4.3.2 广告](#4432-广告)
+            - [4.4.3.3 连接](#4433-连接)
+- [5. 通用属性配置文件(GATT)层](#5-通用属性配置文件gatt层)
+    - [5.1 客户端API](#51-客户端api)
+        - [5.1.1 安装客户端回调](#511-安装客户端回调)
+            - [5.1.1.1 客户端程序回调](#5111-客户端程序回调)
+            - [5.1.1.2 通知和指示回调](#5112-通知和指示回调)
+        - [5.1.2 MTU交换](#512-mtu交换)
+        - [5.1.3 服务和特征发现](#513-服务和特征发现)
+            - [5.1.3.1 发现所有主要服务](#5131-发现所有主要服务)
+            - [5.1.3.2 发现主要服务(通过UUID)](#5132-发现主要服务通过uuid)
+            - [5.1.3.3 发现包含的服务](#5133-发现包含的服务)
+            - [5.1.3.4 发现服务的所有特征](#5134-发现服务的所有特征)
+            - [5.1.3.5 发现特征(通过UUID)](#5135-发现特征通过uuid)
+            - [5.1.3.6 发现特征描述符](#5136-发现特征描述符)
+        - [5.1.4 读取和写入特征](#514-读取和写入特征)
+            - [5.1.4.1 特征值读取程序](#5141-特征值读取程序)
+            - [5.1.4.2 特征读取(通过UUID)程序](#5142-特征读取通过uuid程序)
+            - [5.1.4.3 特征读取(多个)程序](#5143-特征读取多个程序)
+            - [5.1.4.4 特征写入程序](#5144-特征写入程序)
+        - [5.1.5 读取和写入特征描述符](#515-读取和写入特征描述符)
+        - [5.1.6 重置程序](#516-重置程序)
+    - [5.2 服务器API](#52-服务器api)
+        - [5.2.1 服务器回调](#521-服务器回调)
+        - [5.2.2 发送通知和指示](#522-发送通知和指示)
+        - [5.2.3 属性写入通知](#523-属性写入通知)
+- [6. GATT数据库应用程序接口](#6-gatt数据库应用程序接口)
+    - [6.1 写入和读取属性](#61-写入和读取属性)
+    - [6.2 查找属性句柄](#62-查找属性句柄)
+- [7. 创建GATT数据库](#7-创建gatt数据库)
+    - [7.1 静态创建GATT数据库](#71-静态创建gatt数据库)
+        - [7.1.1 声明自定义128位UUID](#711-声明自定义128位uuid)
+        - [7.1.2 声明服务](#712-声明服务)
+            - [7.1.2.1 服务声明宏](#7121-服务声明宏)
+            - [7.1.2.2 包含声明宏](#7122-包含声明宏)
+        - [7.1.3 声明特征](#713-声明特征)
+            - [7.1.3.1 特征声明宏](#7131-特征声明宏)
+            - [7.1.3.2 声明特征值](#7132-声明特征值)
+            - [7.1.3.3 声明特征描述符](#7133-声明特征描述符)
+        - [7.1.4 静态GATT数据库定义示例](#714-静态gatt数据库定义示例)
+    - [7.2 动态创建GATT数据库](#72-动态创建gatt数据库)
+        - [7.2.1 初始化和发布](#721-初始化和发布)
+        - [7.2.2 添加服务](#722-添加服务)
+        - [7.2.3 添加特征和描述符](#723-添加特征和描述符)
+        - [7.2.4 删除服务和特征](#724-删除服务和特征)
+- [8. 创建自定义配置文件](#8-创建自定义配置文件)
+    - [8.1 定义自定义UUID](#81-定义自定义uuid)
+    - [8.2 创建服务功能](#82-创建服务功能)
+    - [8.3 GATT客户端交互](#83-gatt客户端交互)
+- [9. 应用程序结构](#9-应用程序结构)
+    - [9.1 文件夹结构](#91-文件夹结构)
+    - [9.2 应用程序主要框架](#92-应用程序主要框架)
+        - [9.2.1 主要任务](#921-主要任务)
+        - [9.2.2 应用程序消息](#922-应用程序消息)
+        - [9.2.3 空闲任务](#923-空闲任务)
+    - [9.3 BLE连接管理器](#93-ble连接管理器)
+        - [9.3.1 GAP通用事件](#931-gap通用事件)
+        - [9.3.2 GAP配置](#932-gap配置)
+        - [9.3.3 GAP连接事件](#933-gap连接事件)
+    - [9.4 GATT数据库](#94-gatt数据库)
+    - [9.5 RTOS特定](#95-rtos特定)
+        - [9.5.1 操作系统选择](#951-操作系统选择)
+        - [9.5.2 BLE任务配置](#952-ble任务配置)
+    - [9.6 板配置](#96-板配置)
+    - [9.7 BLE初始化](#97-ble初始化)
+    - [9.8 BLE主机栈配置](#98-ble主机栈配置)
+    - [9.9 配置文件配置](#99-配置文件配置)
+    - [9.10 应用程序代码](#910-应用程序代码)
 
 
 # 1. 前言
@@ -126,7 +144,7 @@ extern msgQueue_t gHci2Host_TaskQueue;
 extern osaEventId_t gHost_TaskEvent;
 ```
 
-有关主机所需的RTOS任务的详细信息，请参阅[主机任务初始化](#31-%E4%B8%BB%E6%9C%BA%E4%BB%BB%E5%8A%A1%E5%88%9D%E5%A7%8B%E5%8C%96)。
+有关主机所需的RTOS任务的详细信息，请参阅[主机任务初始化](#31-主机任务初始化)。
 
 ## 2.2 GATT数据库
 
@@ -240,7 +258,7 @@ void Host_TaskHandler(void * args);
 
 应该在应用程序的任务代码中以NULL作为参数调用它。
 
-应用程序开发者需要定义任务事件和队列，如[RTOS任务队列和事件中所述](#21-rtos%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6)。
+应用程序开发者需要定义任务事件和队列，如[RTOS任务队列和事件](#21-rtos任务队列和事件)中所述。
 
 主机任务的优先级始终高于控制器任务。优先级值通过 gHost_TaskPriority_c（ **ble_host_task_config.h** ）和 gControllerTaskPriority_c（ **ble_controller_task_config.h** ）来配置。注意，改变这些值会对BLE栈产生重大的影响。
 
@@ -285,7 +303,7 @@ void Ble_HciRecv
 
 这是应用程序必须调用以将HCI消息插入到主机中的函数。
 
-因此，Ble_Initialize 函数中的 Ble_HciRecv 函数和 hostToControllerInterface 参数直接（如果控制器软件和主机运行在同一芯片上）表示需要连接到LE控制器的两个点（参见[初始化主机的主要函数](#32-%E5%88%9D%E5%A7%8B%E5%8C%96%E4%B8%BB%E6%9C%BA%E7%9A%84%E4%B8%BB%E8%A6%81%E5%87%BD%E6%95%B0)）或通过一个物理接口（例如UART）。
+因此，Ble_Initialize 函数中的 Ble_HciRecv 函数和 hostToControllerInterface 参数直接（如果控制器软件和主机运行在同一芯片上）表示需要连接到LE控制器的两个点（参见[初始化主机的主要函数](#32-初始化主机的主要函数)）或通过一个物理接口（例如UART）。
 
 ## 3.4 主机栈库和API可用性
 
@@ -735,7 +753,7 @@ bleResult_t Gap_StopAdvertising (void);
 
 所有安全检查都由GAP模块内部执行，并自动发送安全错误响应。应用程序开发者需要做的就是注册安全需求。
 
-首先，在构建GATT数据库时（请参阅[创建GATT数据库](#7-%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)），敏感属性应该在其访问权限中内置安全性（例如，只读/带有身份验证读取/带有身份验证写入/具有授权写入，等等）。
+首先，在构建GATT数据库时（请参阅[创建GATT数据库](#7-创建gatt数据库)），敏感属性应该在其访问权限中内置安全性（例如，只读/带有身份验证读取/带有身份验证写入/具有授权写入，等等）。
 
 其次，如果GATT数据库除了在属性权限中已经指定的安全性之外还需要额外的安全性（例如，某些服务在某些情况下需要更高的安全性），则必须调用以下函数：
 
@@ -793,7 +811,7 @@ bleResult_t Gap_DenyLongTermKey
 
 如果设备未绑定，则外设应该期望接收 gConnEvtPairingRequest_c，这指示中央已启动了配对。
 
-如果应用程序接受配对参数（请参阅[配对和绑定](#413-%E9%85%8D%E5%AF%B9%E5%92%8C%E7%BB%91%E5%AE%9A)以获取详细说明），它可以回复：
+如果应用程序接受配对参数（请参阅[配对和绑定](#413-配对和绑定)以获取详细说明），它可以回复：
 
 ```c
 bleResult_t Gap_AcceptPairingRequest
@@ -805,7 +823,7 @@ bleResult_t Gap_AcceptPairingRequest
 
 这时，外设发送自己的配对参数，如SMP所定义。
 
-发送此响应后，应用程序应该期望接收与中央相同的配对事件（请参阅[配对和绑定](#413-%E9%85%8D%E5%AF%B9%E5%92%8C%E7%BB%91%E5%AE%9A)），但有一个例外：如果应用程序在连接之前通过调用如下API设置了配对的密钥（PIN），则 gConnEvtPasskeyRequest_c 事件不会被调用：
+发送此响应后，应用程序应该期望接收与中央相同的配对事件（请参阅[配对和绑定](#413-配对和绑定)），但有一个例外：如果应用程序在连接之前通过调用如下API设置了配对的密钥（PIN），则 gConnEvtPasskeyRequest_c 事件不会被调用：
 
 ```c
 bleResult_t Gap_SetLocalPasskey
@@ -953,7 +971,7 @@ aPeerIdentities 是每个绑定设备的身份信息的数组。身份信息包�
 
 如果 advertisingAddressResolved 等于FALSE，则广告者使用的是公共或随机静态地址，一个NRPA或一个无法解析的PRA。因此，通过将 usePeerIdentityAddress 设置为FALSE ，启动与此设备的连接，就像未启用控制器隐私一样。
 
-> PS：蓝牙地址分为公共（public）地址和随机（random）地址。其中公共地址是固定的，由厂商设定；随机地址分为静态（static）地址和私有（private）地址，静态地址在蓝牙设备在每次上电后初始化，私有地址分为[可解析私有地址](#4411-%E5%8F%AF%E8%A7%A3%E6%9E%90%E7%A7%81%E6%9C%89%E5%9C%B0%E5%9D%80)和[非可解析私有地址](#4412-%E9%9D%9E%E5%8F%AF%E8%A7%A3%E6%9E%90%E7%A7%81%E6%9C%89%E5%9C%B0%E5%9D%80)。
+> PS：蓝牙地址分为公共（public）地址和随机（random）地址。其中公共地址是固定的，由厂商设定；随机地址分为静态（static）地址和私有（private）地址，静态地址在蓝牙设备在每次上电后初始化，私有地址分为[可解析私有地址](#4411-可解析私有地址)和[非可解析私有地址](#4412-非可解析私有地址)。
 
 #### 4.4.3.2 广告
 
@@ -1075,7 +1093,7 @@ bleResult_t GattClient_RegisterNotificationCallback
 
 指示的定义与之相似。
 
-当收到通知或指示时，客户端使用 characteristicValueHandle 来确认那些特征被通知。客户端必须知道可能在任何时候被 通知/指示 的特征值句柄，因为它先前已通过编写CCCD来激活它们（请参阅[读取和写入特征描述符](#515-%E8%AF%BB%E5%8F%96%E5%92%8C%E5%86%99%E5%85%A5%E7%89%B9%E5%BE%81%E6%8F%8F%E8%BF%B0%E7%AC%A6)）。
+当收到通知或指示时，客户端使用 characteristicValueHandle 来确认那些特征被通知。客户端必须知道可能在任何时候被 通知/指示 的特征值句柄，因为它先前已通过编写CCCD来激活它们（请参阅[读取和写入特征描述符](#515-读取和写入特征描述符)）。
 
 ### 5.1.2 MTU交换
 
@@ -1241,7 +1259,7 @@ bleResult_t GattClient_DiscoverPrimaryServicesByUuid
 );
 ```
 
-该程序与[发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)中描述的程序非常相似。唯一的区别是这次我们根据两个额外参数描述的服务UUID来过滤搜索：pUuid 和 uuidType。
+该程序与[发现所有主要服务](#5131-发现所有主要服务)中描述的程序非常相似。唯一的区别是这次我们根据两个额外参数描述的服务UUID来过滤搜索：pUuid 和 uuidType。
 
 该程序在客户端只对特定类型的服务感兴趣时非常有用。通常，它在已知包含某些服务（某些配置文件特定的）的服务器上执行。因此，大多数情况下，搜索期望找到给定类型的单个服务。结果通常只分配一个结构。
 
@@ -1307,7 +1325,7 @@ void gattClientProcedureCallback
 
 #### 5.1.3.3 发现包含的服务
 
-[发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)显示如何发现主要服务。但是，服务器也可能包含次要服务，这些次要服务不应单独使用，通常包含在主服务中。包含意味着所有次要服务的特征都需要主服务的配置文件才可以使用。
+[发现所有主要服务](#5131-发现所有主要服务)显示如何发现主要服务。但是，服务器也可能包含次要服务，这些次要服务不应单独使用，通常包含在主服务中。包含意味着所有次要服务的特征都需要主服务的配置文件才可以使用。
 
 因此，在发现主服务后，可以使用以下程序来发现其中包含的服务（通常是次要服务）：
 
@@ -1322,11 +1340,11 @@ bleResult_t GattClient_FindIncludedServices
 
 pIoService 指向的服务结构必须具有链接到已分配的服务数组的 aIncludedServices 字段，其大小为 maxServiceCount，根据要找到的包含的服务的预期数量进行选择。这是应用程序的选择，通常遵循配置文件规范。
 
-此外，必须设置服务的范围（startHandle 和 endHandle 字段），这可能已由先前的服务发现程序完成（如[发现所有主要服务](#5131-%E5%8F%91%E7%8E%B0%E6%89%80%E6%9C%89%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1)和[发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)中所述）。
+此外，必须设置服务的范围（startHandle 和 endHandle 字段），这可能已由先前的服务发现程序完成（如[发现所有主要服务](#5131-发现所有主要服务)和[发现主要服务(通过UUID)](#5132-发现主要服务通过uuid)中所述）。
 
 发现包含的服务的数量由GATT模块在 pIoService 结构的 cNumIncludedServices 字段中写入。显然，最多有 maxServiceCount 个包含的服务被发现。
 
-以下示例假定心率服务是使用[发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)中的程序发现的。
+以下示例假定心率服务是使用[发现主要服务(通过UUID)](#5132-发现主要服务通过uuid)中的程序发现的。
 
 ```c
 /* Finding services included in the Heart Rate Primary Service */
@@ -1406,7 +1424,7 @@ bleResult_tGattClient_DiscoverAllCharacteristicsOfService
 
 此外，服务结构的 aCharacteristics 字段必须链接到已分配的特征数组。
 
-以下示例发现[发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)部分中发现的心率服务中包含的所有特征。
+以下示例发现[发现主要服务(通过UUID)](#5132-发现主要服务通过uuid)部分中发现的心率服务中包含的所有特征。
 
 ```c
 gattService_t* pService = &heartRateService
@@ -1480,7 +1498,7 @@ void gattClientProcedureCallback
 
 此程序在客户端打算在特定服务中发现特定特征时非常有用。API允许发现同一类型的多个特征，但通常是在预期找到给定类型的单个特征时使用。
 
-继续[发现主要服务(通过UUID)](#5132-%E5%8F%91%E7%8E%B0%E4%B8%BB%E8%A6%81%E6%9C%8D%E5%8A%A1%E9%80%9A%E8%BF%87uuid)的示例，让我们假设客户端想要发现心率服务内的心率控制点特征，如下面的代码所示。
+继续[发现主要服务(通过UUID)](#5132-发现主要服务通过uuid)的示例，让我们假设客户端想要发现心率服务内的心率控制点特征，如下面的代码所示。
 
 ```c
 gattService_t * pService = &heartRateService;
@@ -1580,7 +1598,7 @@ endingHandle 应该设置为数据库中下一个特征或服务声明的句柄�
 
 但是，如果应用程序不知道下一个声明所在的位置并且无法提供此优化提示，则 endsHandle 应设置为 0xFFFF。
 
-继续[发现特征(通过UUID)](#5135-%E5%8F%91%E7%8E%B0%E7%89%B9%E5%BE%81%E9%80%9A%E8%BF%87uuid)的示例，以下代码假定心率控制点特征具有不超过5个描述符并执行描述符发现。
+继续[发现特征(通过UUID)](#5135-发现特征通过uuid)的示例，以下代码假定心率控制点特征具有不超过5个描述符并执行描述符发现。
 
 ```c
 #define mcMaxDescriptors_c 5
@@ -2178,7 +2196,7 @@ bleResult_t GattServer_RegisterCallback
 gattServerEvent_t 结构的第一个成员是 eventType，它是一个具有以下可能值的枚举类型：
 * gEvtMtuChanged_c：表示客户端启动的MTU交换程序已成功完成且ATT_MTU已增加。事件数据包含ATT_MTU的新值。应用程序流是否可能依赖于ATT_MTU的值，例如，可能存在针对不同ATT_MTU范围的特定优化。如果在此程序中未更改ATT_MTU，则不会触发此事件
 * gEvtHandleValueConfirmation_c：在服务器发送指示后，从客户端收到的确认
-* gEvtAttributeWritten_c，gEvtAttributeWrittenWithoutResponse_c：请参阅[属性写入通知](#523-%E5%B1%9E%E6%80%A7%E5%86%99%E5%85%A5%E9%80%9A%E7%9F%A5)
+* gEvtAttributeWritten_c，gEvtAttributeWrittenWithoutResponse_c：请参阅[属性写入通知](#523-属性写入通知)
 * gEvtCharacteristicCccdWritten_c：客户端写入了一个CCCD。应用程序应使用 Gap_SaveCccd 保存绑定设备的CCCD值
 * gEvtError_c：服务器启动程期间发生错误
 
@@ -2297,7 +2315,7 @@ bleResult_t GattDb_WriteAttribute
 
 值长度必须是有效的，正如创建数据库时定义的那样。否则，将返回 gGattInvalidValueLength_c 错误。
 
-此外，如果数据库是静态创建的，如[创建GATT数据库](#7-%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)中所述，句柄可以通过枚举成员（在 **gatt_db.h** 中定义了一个友好的名称）引用。
+此外，如果数据库是静态创建的，如[创建GATT数据库](#7-创建gatt数据库)中所述，句柄可以通过枚举成员（在 **gatt_db.h** 中定义了一个友好的名称）引用。
 
 ```c
 bleResult_t GattDb_ReadAttribute
@@ -2621,7 +2639,7 @@ GattDbDynamic_Init() API的自动调用由 **gatt_database.c** 源文件中的 G
 UUID128(uuid_service_temperature, 0xfb ,0x34 ,0x9b ,0x5f ,0x80 ,0x00 ,0x00 ,0x80 ,0x00 ,0x10 , 0x00 , 0x02 ,0x00 ,0xfe ,0x00 ,0x00)
 ```
 
-服务和特征的定义在 **gattdb.h** 中进行，如[创建GATT数据库](#7-%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)中所述。有关如何构建数据库的更多详细信息，请参阅[应用程序结构]()。
+服务和特征的定义在 **gattdb.h** 中进行，如[创建GATT数据库](#7-创建gatt数据库)中所述。有关如何构建数据库的更多详细信息，请参阅[应用程序结构](#9-应用程序结构)。
 
 ## 8.2 创建服务功能
 
@@ -2724,6 +2742,367 @@ typedef struct tmcConfig_tag
     gattDbCharPresFormat_t  tempFormat;
 } tmcConfig_t;
 ```
+
+------------------------------------------------------------------------------------------------------------------------
+
+# 9. 应用程序结构
+
+本章介绍了可在SDK中找到的蓝牙低功耗演示应用程序的组织。通过熟悉应用程序结构，用户可以快速地将其设计适应的现有演示或创建新的应用程序。
+
+温度传感器应用程序用作展示架构的参考。
+
+## 9.1 文件夹结构
+
+下图展示了应用程序的文件夹结构：
+
+![Figure 6. Application Folder structure in workspace](../Pic/BLE%20Application%20Developer's%20Guide-Figure6.jpg)
+
+app 文件夹遵循一个特定的结构，该结构推荐用于任何使用BLE主机栈开发的应用程序：
+* common 组包含所有配置文件和演示应用程序共享的应用程序框架：
+    * 应用程序主要框架
+    * BLE连接管理器
+    * BLE栈以及任务初始化和配置
+    * GATT数据库
+* temperature_sensor 组包含特定于HRS应用程序的代码
+
+bluetooth 文件夹/组 包含：
+* controller/interface 和 host/interface - 控制器和主机的公共接口；功能包含在库（**ble_kw4xz_controller_lib.a** 和 **ble_4-x_host_lib_[armarch].a** ）中，库位于子文件夹 controller/lib 和 host/lib 中，其没有显示在IAR项目结构中，而是添加到库类别下的工具链链接器设置中
+* hci_transport 包含HCI传输的头文件和源，当应用程序使用串行接口与外部控制器通信时。在示例演示中，主机和控制器都位于同一芯片上
+* profiles 包含配置文件特定的代码；标准配置文件的每个演示应用程序都使用它
+
+framework 文件夹/组 包含示例应用程序使用的框架部件。更多详情，请参阅 **Connectivity Framework Reference Manual**。
+
+KSDK 文件夹/组 包含板特定的配置文件。
+
+RTOS 文件夹包含所支持的操作系统的源代码或裸机的配置。
+
+## 9.2 应用程序主要框架
+
+应用程序主要模块包含所有程序使用的通用代码，如：
+* 主要任务
+* 主机栈任务和应用程序任务之间的消息传递框架
+* 在低功耗应用程序中使用的空闲任务
+
+### 9.2.1 主要任务
+
+主要任务（main_task）是操作系统创建的第一个任务，也是初始化系统其余部分的任务。它初始化框架组件（内存管理器，计时器管理器等）和蓝牙主机栈（Ble_Initialize）。它还从 **app.c** 调用 BleApp_Init，该函数用于初始化已实现的应用程序特定的外设驱动程序。
+
+该函数调用代表应用程序任务的 App_Thread。此任务重用为主要任务分配的堆栈，并被调用以处理主机栈发送的所有事件和消息。
+
+主要任务的堆栈大小和优先级在 **fsl_os_abstraction_config.h** 中定义：
+
+```c
+#ifndef gMainThreadStackSize_c
+#define gMainThreadStackSize_c 1024
+#endif
+#ifndef gMainThreadPriority_c
+#define gMainThreadPriority_c 7
+#endif
+```
+
+### 9.2.2 应用程序消息
+
+该模块包含一个包装器，用于为主机任务上下文中的主机栈生成的事件创建消息，并将这些消息发送给应用程序，以在应用程序任务的上下文中处理。
+
+例如，主机生成的连接事件由 App_ConnectionCallback 接收。该函数创建一条消息，将其置于应用程序队列的主机中，并使用 gAppEvtMsgFromHostStack_c 向应用程序发出信号。应用程序任务将消息出列并调用 App_HandleHostMessageInput，它调用实现应用程序特定代码（**app.c**）的相应回调，在此示例中为：BleApp_ConnectionCallback。
+
+强烈建议应用程序开发者使用 **app.c** 模块在此类回调上添加自定义代码。
+
+### 9.2.3 空闲任务
+
+空闲任务是在应用程序启用框架低功耗模块时创建的。它包含在节点进入之前和退出睡眠模式之后执行的代码。更多低功耗功能的信息。请阅读[低功耗管理]()。
+
+当运行FreeRTOS作为操作系统时，应用程序将通过链接 vApplicationIdleHook 来挂钩FreeRTOS库中实现的空闲任务。
+
+应用程序开发者应将此函数用作应用程序特定代码的容器：
+
+```c
+static void App_Idle(void);
+```
+
+堆栈大小在 **ApplMain.h** 中定义：
+
+```c
+#ifndef gAppIdleTaskStackSize_c
+#define gAppIdleTaskStackSize_c (400)
+#endif
+```
+
+## 9.3 BLE连接管理器
+
+连接管理器是一个助手模块，其包含通用的应用程序配置和与蓝牙主机栈的交互。它实现了以下事件和方法：
+* 主机栈GAP通用事件
+* GAP外设和GAP中央配置上的主机栈连接事件
+* GAP外设或GAP中央的主机栈配置
+
+### 9.3.1 GAP通用事件
+
+GAP通用事件由主机栈触发，并通过通用回调发送到应用程序。在进行任何应用程序特定的交互之前，将调用连接管理器回调来处理通用的应用程序事件，例如设备地址存储。
+
+```c
+void BleApp_GenericCallback ( gapGenericEvent_t * pGenericEvent)
+{
+    /* Call BLE Conn Manager */
+    BleConnManager_GenericEvent(pGenericEvent);
+
+    switch (pGenericEvent-> eventType )
+    {
+        ...
+    }
+}
+```
+
+### 9.3.2 GAP配置
+
+GAP中央或外设配置用于创建通用的配置（例如设置公共地址，注册安全需求，在白名单中添加绑定），之后应用程序可以自定义这些配置。在任何应用程序特定的配置GAP连接事件之前，在 BleApp_Config 函数中调用它：
+
+```c
+static void BleApp_Config()
+{
+    /* Configure as GAP peripheral */
+    BleConnManager_GapPeripheralConfig();
+    ...
+}
+```
+
+### 9.3.3 GAP连接事件
+
+GAP连接事件由主机栈触发，并通过连接回调发送。在进行任何应用程序特定的交互之前，都会调用连接管理器回调来处理通用的应用程序事件，例如设备连接，断开连接或配对相关请求。它在已注册的连接中调用，如下所示：
+
+```c
+static void BleApp_ConnectionCallback ( deviceId_t peerDeviceId, gapConnectionEvent_t *pConnectionEvent)
+{
+    /* Connection Manager to handle Host Stack interactions */
+    BleConnManager_GapPeripheralEvent(peerDeviceId, pConnectionEvent);
+    
+    switch (pConnectionEvent-> eventType )
+    {
+        ...
+    }
+}
+```
+
+强烈建议应用程序开发者使用 **app.c** 模块添加自定义代码。
+
+## 9.4 GATT数据库
+
+gatt_db 包含了一个头文件集合分组（在 macros 子文件夹中）。这些宏用于通过不同方式扩展 **gatt_db.h** 文件的内容来为GATT数据库生成静态代码。[创建GATT数据库](#7-创建gatt数据库)解释了如何使用用户友好的宏来编写 **gatt_db.h** 文件，这些宏定义了GATT数据库。
+
+在应用程序编译时，gatt_database.c文件中填充了用于分配和正确填充GATT数据库的枚举，结构和初始化代码。通过这种方式，可以创建并正确初始化 gattDatabase 数组和 gGattDbAttributeCount_c 变量（请参阅[GATT数据库](#22-gatt数据库)）。
+
+> NOTE：请勿修改 gatt_db 文件夹及其子文件夹中包含的任何文件。
+
+为了完成GATT数据库的初始化，此演示应用程序在其特定应用程序文件夹中包含了所需的 **gatt_db.h** 和 **gatt_uuid128.h** 文件，以及其他配置文件特定的配置和代码文件。
+
+## 9.5 RTOS特定
+
+### 9.5.1 操作系统选择
+
+SDK为每个支持的操作系统（FreeRTOS OS）和裸机配置提供不同的项目。要在系统之间切换，用户需要切换工作区。
+
+RTOS源代码位于KSDK包中，并链接到RTOS虚拟文件夹的工作区中，如下所示：
+
+![Figure 7. Location of FreeRTOS souce code in workspace](../Pic/BLE%20Application%20Developer's%20Guide-Figure7.jpg)
+
+### 9.5.2 BLE任务配置
+
+为应用程序开发者提供了四个用于RTOS任务初始化的文件：
+* **ble_controller_task_config.h** 和 **ble_controller_task.c**，用于控制器
+* **ble_host_task_config.h** 和 **ble_host_tasks.c**，用于主机
+
+建议重用这些文件，因为它们执行所有与RTOS相关的必要工作。当任务需要更大的堆栈大小或不同的优先级设置时，应用程序开发者应该只修改 **\*_config.h** 文件中的宏。应在 **app_preinclude.h** 文件中覆盖新值。
+
+## 9.6 板配置
+
+可以在 ConnSw/boards 文件夹中找到支持的板配置文件。这些文件包含驱动程序使用的时钟和引脚配置。用户可以根据设计修改引脚和时钟源的配置来自定义板文件。
+
+![Figure 8. Board configuration files](../Pic/BLE%20Application%20Developer's%20Guide-Figure8.jpg)
+
+## 9.7 BLE初始化
+
+**ble_init.h** 和 **ble_init.c** 文件包含以下函数的声明和实现：
+
+```c
+bleResult_t Ble_Initialize
+(
+    gapGenericCallback_t gapGenericCallback
+)
+{
+#if (gUseHciTransportDownward_d == 1)
+
+    /* Configure HCI Transport */
+    hcitConfigStruct_t hcitConfigStruct =
+    {
+        .interfaceType = gHcitInterfaceType_d,
+        .interfaceChannel = gHcitInterfaceNumber_d,
+        .interfaceBaudrate = gHcitInterfaceSpeed_d,
+        .transportInterface = Ble_HciRecv
+    };
+
+    /* HCI Transport Init */
+    if (gHciSuccess_c != Hcit_Init(&hcitConfigStruct))
+    {
+        return gHciTransportError_c;
+    }
+
+    /* BLE Host Tasks Init */
+    if (osaStatus_Success != Ble_HostTaskInit())
+    {
+        return gBleOsError_c;
+    }
+
+    /* BLE Host Stack Init */
+    return Ble_HostInitialize(gapGenericCallback, (hciHostToControllerInterface_t) Hcit_SendPacket);
+
+#elif (gUseHciTransportUpward_d == 1)
+
+    if (osaStatus_Success != Controller_TaskInit())
+    {
+        return gBleOsError_c;
+    }
+
+    /* BLE Controller Init */
+    if (osaStatus_Success != Controller_Init((gHostRecvCallback_t)Hcit_SendPacket))
+    {
+        return gBleOsError_c;
+    }
+
+    /* Configure HCI Transport */
+    hcitConfigStruct_t hcitConfigStruct =
+    {
+        .interfaceType = gHcitInterfaceType_d,
+        .interfaceChannel = gHcitInterfaceNumber_d,
+        .interfaceBaudrate = gHcitInterfaceSpeed_d,
+        .transportInterface = Controller_RecvPacket
+    };
+
+    return Hcit_Init(&hcitConfigStruct);
+
+#else
+
+    /* BLE Controller Task Init */
+    if (osaStatus_Success != Controller_TaskInit())
+    {
+        return gBleOsError_c;
+    }
+
+    /* BLE Controller Init */
+    if (osaStatus_Success != Controller_Init(Ble_HciRecv))
+    {
+        return gBleOsError_c;
+    }
+
+    /* BLE Host Tasks Init */
+    if (osaStatus_Success != Ble_HostTaskInit())
+    {
+        return gBleOsError_c;
+    }
+
+    /* BLE Host Stack Init */
+    return Ble_HostInitialize(gapGenericCallback, ( hciHostToControllerInterface_t ) Controller_RecvPacket);
+
+#endif
+}
+```
+
+> NOTE：应用程序应该使用此函数，因为它正确执行了所有必需的BLE初始化。
+
+下面提供了逐步分析：
+* 首先，调用 **ble_host_task_config.h** 中的 Ble_HostTaskInit 函数。这将创建BLE主机栈所需的两个任务
+* 接下来，基于 gUseHciTransportDownward_d 编译开关将初始化分成两个路径
+    * 如果它被激活（等于1），则主机栈通过HCI接口与外部控制器通信。在此示例中，使用串行管理器（USB）初始化HCI接口。然后，Ble_HostInitialize 函数使用作为 hciHostToControllerInterface_t 参数的传输包传输函数以初始化主机
+    * 如果它未激活（等于0），（这是演示程序的默认设置），则控制器库可用并且控制器任务通过 Controller_TaskInit 初始化。然后，用 Controller_Init 和 Ble_HostInitialize 初始化的两个堆栈将控制器的HCI接口与主机连接起来
+
+## 9.8 BLE主机栈配置
+
+BLE主机栈预先配置为四个可用库：
+* 外设主机栈库
+* 中央主机栈库
+* 中央和外设主机栈库
+* FSCI 中央和外设主机栈库
+
+这些库位于 ConnSw/bluetooth/libs 文件夹中。用户应将其用例的最佳匹配库添加到其项目的链接器选项中。例如，温度传感器使用外设主机栈库，如下所示：
+
+![Figure 9. Linker configuration for Temperature Sensor](../Pic/BLE%20Application%20Developer's%20Guide-Figure9.jpg)
+
+## 9.9 配置文件配置
+
+实现的配置文件和服务位于 ConnSw/bluetooth/profiles 文件夹中。应用程序链接实现配置文件所需的每个服务源文件和接口。例如，对于温度传感器，目录树如下所示：
+
+![Figure 10. Linker configuration for Temperature Sensor](../Pic/BLE%20Application%20Developer's%20Guide-Figure10.jpg)
+
+温度配置文件实现自定义温度服务，电池和设备信息服务。
+
+## 9.10 应用程序代码
+
+应用程序文件夹（ConnSw/app）包含common文件夹和应用程序文件夹。应用程序文件夹包含以下模块：
+* **app.c** 和 **app.h**。此模块存储应用程序特定的功能（API用于特定触发器，外设的处理，栈的回调，低功耗的处理等）。
+
+在初始化BLE主机栈之前，主要任务调用 BleApp_Init。此函数可以存储独立于主机栈工作的初始化模块。例如，温度传感器应用程序初始化温度传感器驱动：
+
+```c
+void BleApp_Init(void)
+{
+    TempSensor_Init();
+}
+```
+
+初始化栈后，应用程序的通用回调调用 BleApp_Config。该函数包含初始化后对主机栈所做的配置。这包括注册回调，设置服务安全性，启动服务，分配定时器，将设备添加到白名单等。例如，温度传感器配置以下内容：
+
+```c
+static void BleApp_Config()
+{
+    /* Configure as GAP peripheral */
+    BleConnManager_GapPeripheralConfig();
+
+    /* Register for callbacks */
+    App_RegisterGattServerCallback(BleApp_GattServerCallback);
+
+    mAdvState. advOn = FALSE;
+
+    /* Start services */
+    tmsServiceConfig. initialTemperature = 100 * BOARD_GetTemperature();
+    Tms_Start(&tmsServiceConfig);
+    basServiceConfig. batteryLevel = BOARD_GetBatteryLevel();
+    Bas_Start(&basServiceConfig);
+    Dis_Start(&disServiceConfig);
+
+    /* Allocate aplication timer */
+    appTimerId = TMR_AllocateTimer();
+
+#if (cPWR_UsePowerDownMode)
+    PWR_ChangeDeepSleepMode(3);
+    PWR_AllowDeviceToSleep();
+#endif
+}
+```
+
+为了启动应用程序功能，需要调用 BleApp_Start。该函数通常包含开始为传感器节点做广告或扫描中央设备的代码。在温度传感器的示例中，函数如下：
+
+```c
+void BleApp_Start(void)
+{
+    Led1On();
+
+    if (mPeerDeviceId == gInvalidDeviceId_c)
+    {
+        /* Device is not connected and not advertising*/
+        if (!mAdvState. advOn )
+        {
+            BleApp_Advertise();
+        }
+    }
+    else
+    {
+        BleApp_SendTemperature();
+    }
+}
+```
+
+* **app_config.c**。此文件包含用于配置栈的数据结构。这包括广告数据，扫描数据，连接参数，广告参数，SMP密钥，安全需求等。
+* **app_preinclude.h**。此头文件包含用于覆盖应用程序中任何模块的默认配置的宏。它作为预包含文件添加到IAR的预处理器命令行中：  
+![Figure 11. Preinclude file](../Pic/BLE%20Application%20Developer's%20Guide-Figure11.jpg)
+* **gatt_db.h** 和 **gatt_uuid128.h**。这两个头文件包含GATT数据库的定义和应用程序使用的自定义UUID。有关更多信息，请参阅[创建GATT数据库](#7-创建gatt数据库)。
 
 ------------------------------------------------------------------------------------------------------------------------
 
