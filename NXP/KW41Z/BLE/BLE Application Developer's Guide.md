@@ -75,6 +75,10 @@
         - [7.2.2 添加服务](#722-%E6%B7%BB%E5%8A%A0%E6%9C%8D%E5%8A%A1)
         - [7.2.3 添加特征和描述符](#723-%E6%B7%BB%E5%8A%A0%E7%89%B9%E5%BE%81%E5%92%8C%E6%8F%8F%E8%BF%B0%E7%AC%A6)
         - [7.2.4 删除服务和特征](#724-%E5%88%A0%E9%99%A4%E6%9C%8D%E5%8A%A1%E5%92%8C%E7%89%B9%E5%BE%81)
+- [8. 创建自定义配置文件](#8-%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+    - [8.1 定义自定义UUID](#81-%E5%AE%9A%E4%B9%89%E8%87%AA%E5%AE%9A%E4%B9%89uuid)
+    - [8.2 创建服务功能](#82-%E5%88%9B%E5%BB%BA%E6%9C%8D%E5%8A%A1%E5%8A%9F%E8%83%BD)
+    - [8.3 GATT客户端交互](#83-gatt%E5%AE%A2%E6%88%B7%E7%AB%AF%E4%BA%A4%E4%BA%92)
 
 
 # 1. 前言
@@ -2601,6 +2605,125 @@ GattDbDynamic_Init() API的自动调用由 **gatt_database.c** 源文件中的 G
 要删除服务或特性，可以使用以下API，这两个API都只需要声明句柄作为参数：
 * GattDbDynamic_RemoveService
 * GattDbDynamic_RemoveCharacteristic
+
+------------------------------------------------------------------------------------------------------------------------
+
+# 8. 创建自定义配置文件
+
+本章介绍用户如何通过定义配置文件和服务在BLE主机栈上创建可自定义的功能。以温度传感器和收集器应用程序（在BLE SDK中找到）使用的温度配置文件作为参考，以解释构建自定义功能的步骤。
+
+## 8.1 定义自定义UUID
+
+定义配置文件中包含的新服务的第一步是为服务和包含的特征定义自定义的128位UUID。这些值在 **gatt_uuid128.h** 中定义，该文件位于应用程序文件夹中。例如，温度配置文件对服务使用以下UUID：
+
+```c
+/* Temperature */
+UUID128(uuid_service_temperature, 0xfb ,0x34 ,0x9b ,0x5f ,0x80 ,0x00 ,0x00 ,0x80 ,0x00 ,0x10 , 0x00 , 0x02 ,0x00 ,0xfe ,0x00 ,0x00)
+```
+
+服务和特征的定义在 **gattdb.h** 中进行，如[创建GATT数据库](#7-%E5%88%9B%E5%BB%BAgatt%E6%95%B0%E6%8D%AE%E5%BA%93)中所述。有关如何构建数据库的更多详细信息，请参阅[应用程序结构]()。
+
+## 8.2 创建服务功能
+
+SDK中的所有已定义服务都有一个通用模板，其帮助应用程序作出相应的行为。
+
+服务本地存储已连接客户端的设备标识。该值在订阅和非订阅事件中被更改。
+
+```c
+/*! Temperature Service - Subscribed Client*/
+static deviceId_t mTms_SubscribedClientId;
+```
+
+应用程序通过服务配置结构初始化和更改服务。它通常包含服务句柄，服务的初始值（例如，温度服务的初始温度）以及在某些情况下可以存储已保存测量值的用户特定结构（例如，血压服务）。以下是自定义温度服务的示例：
+
+```c
+/*! Temperature Service - Configuration */
+typedef struct tmsConfig_tag
+{
+    uint16_t serviceHandle ;
+    int16_t  initialTemperature ;
+} tmsConfig_t ;
+```
+
+通过调用启动程序来初始化服务。该函数需要一个指向服务配置结构的指针作为输入。通常在初始化应用程序时调用此函数。它重置订阅客户端的静态设备标识，并初始化动态和静态特征值。温度服务（TMS）的示例如下所示：
+
+```c
+bleResult_t Tms_Start ( tmsConfig_t *pServiceConfig)
+{
+    mTms_SubscribedClientId = gInvalidDeviceId_c;
+    
+    return Tms_RecordTemperatureMeasurement (pServiceConfig-> serviceHandle , 
+                                             pServiceConfig->initialTemperature );
+}
+```
+
+设备连接到服务器时会触发服务订阅。它需要将对端设备标识作为输入参数来更新本地变量。断开连接时，将调用取消订阅函数以重置设备标识。对于温度服务：
+
+```c
+bleResult_t Tms_Subscribe (deviceId_t deviceId)
+{
+    mTms_SubscribedClientId = deviceId;
+    return gBleSuccess_c;
+}
+
+bleResult_t Tms_Unsubscribe (void)
+{
+    mTms_SubscribedClientId = gInvalidDeviceId_c;
+    return gBleSuccess_c;
+}
+```
+
+根据服务的复杂性，API实现了额外的函数。对于温度服务，只有一个可以通过服务器通知的温度特性。API实现了记录测量函数，该函数将新测量值保存在GATT数据库中，并在可能的情况下将通知发送到客户端设备。该函数需要服务句柄和新的温度值作为输入参数：
+
+```c
+bleResult_t Tms_RecordTemperatureMeasurement (uint16_t serviceHandle, int16_t temperature)
+{
+    uint16_t handle;
+    bleResult_t result;
+    bleUuid_t uuid = Uuid16(gBleSig_Temperature_d);
+
+    /* Get handle of Temperature characteristic */
+    result = GattDb_FindCharValueHandleInService(serviceHandle, gBleUuidType16_c, &uuid, &handle);
+
+    if (result != gBleSuccess_c)
+        return result;
+
+    /* Update characteristic value */
+    result = GattDb_WriteAttribute(handle, sizeof( uint16_t ), ( uint8_t *)&temperature);
+    
+    if (result != gBleSuccess_c)
+        return result;
+    
+    Hts_SendTemperatureMeasurementNotification(handle);
+    
+    return gBleSuccess_c;
+}
+```
+
+为了适应重置服务的一些用例，调用停止函数。重置还意味着服务取消订阅。以下是温度服务的示例：
+
+```c
+bleResult_t Tms_Stop ( tmsConfig_t *pServiceConfig)
+{
+    return Tms_Unsubscribe();
+}
+```
+
+## 8.3 GATT客户端交互
+
+服务的客户端（包括服务发现，通知配置，属性读取等）由应用程序处理。应用程序调用GATT客户端API并做出相应的反应。此规则的唯一例外是服务接口声明了客户端配置结构。此结构通常包含服务句柄以及发现的所有特征值和描述符的句柄。此外，它还可以包含客户端可用于与服务器交互的值。对于温度服务客户端，结构如下：
+
+```c
+/*! Temperature Client - Configuration */
+typedef struct tmcConfig_tag
+{
+    uint16_t                hService;
+    uint16_t                hTemperature;
+    uint16_t                hTempCccd;
+    uint16_t                hTempDesc;
+    gattDbCharPresFormat_t  tempFormat;
+} tmcConfig_t;
+```
 
 ------------------------------------------------------------------------------------------------------------------------
 
