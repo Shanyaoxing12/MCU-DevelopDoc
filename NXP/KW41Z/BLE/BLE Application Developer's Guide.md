@@ -97,6 +97,21 @@
     - [9.8 BLE主机栈配置](#98-ble主机栈配置)
     - [9.9 配置文件配置](#99-配置文件配置)
     - [9.10 应用程序代码](#910-应用程序代码)
+- [10. 低功耗管理](#10-低功耗管理)
+    - [10.1 系统考虑因素](#101-系统考虑因素)
+    - [10.2 何时/如何 进入低功耗状态](#102-何时如何-进入低功耗状态)
+    - [10.3 深度睡眠模式](#103-深度睡眠模式)
+        - [10.3.1 深度睡眠模式1](#1031-深度睡眠模式1)
+        - [10.3.2 深度睡眠模式2](#1032-深度睡眠模式2)
+        - [10.3.3 深度睡眠模式3](#1033-深度睡眠模式3)
+        - [10.3.4 深度睡眠模式4](#1034-深度睡眠模式4)
+        - [10.3.5 深度睡眠模式5](#1035-深度睡眠模式5)
+        - [10.3.6 深度睡眠模式6](#1036-深度睡眠模式6)
+    - [10.4 低功耗使用示例](#104-低功耗使用示例)
+        - [10.4.1 BLE栈空闲时使用低功耗](#1041-ble栈空闲时使用低功耗)
+        - [10.4.2 广告时使用低功耗](#1042-广告时使用低功耗)
+        - [10.4.3 扫描时使用低功耗](#1043-扫描时使用低功耗)
+        - [10.4.4 在连接中使用低功耗](#1044-在连接中使用低功耗)
 
 
 # 1. 前言
@@ -3103,6 +3118,176 @@ void BleApp_Start(void)
 * **app_preinclude.h**。此头文件包含用于覆盖应用程序中任何模块的默认配置的宏。它作为预包含文件添加到IAR的预处理器命令行中：  
 ![Figure 11. Preinclude file](../Pic/BLE%20Application%20Developer's%20Guide-Figure11.jpg)
 * **gatt_db.h** 和 **gatt_uuid128.h**。这两个头文件包含GATT数据库的定义和应用程序使用的自定义UUID。有关更多信息，请参阅[创建GATT数据库](#7-创建gatt数据库)。
+
+------------------------------------------------------------------------------------------------------------------------
+
+# 10. 低功耗管理
+
+## 10.1 系统考虑因素
+
+ARM®Cortex®-M0+ CPU和BLE链路层硬件具有自己的电源模式。因此，KW4x SoC的低功耗模式是BLE链路层电源模式和MCU低功耗模式之间的组合。
+
+对于MCU，定义了两种类型的低功耗模式：睡眠模式（基于ARM架构睡眠模式）和深度睡眠模式（基于ARM架构深度睡眠模式）。本文档仅对深度睡眠模式感兴趣，此元件使用的MCU深度睡眠模式为LLS3和VLLS0/1。
+
+BLE链路层也具有睡眠和深度睡眠模式，但此元件仅使用深度睡眠模式。要运行该模式，BLE链路层需要来自RF参考振荡器的时钟，并通过名为BLE系统时钟请求信号请求它。该信号由RSIM模块监控，并且当它被置为高电平时，RSIM产生中断请求。可以在LLWU中配置此中断以唤醒系统。进入深度睡眠状态后，BLE链路层取消激活BLE系统时钟请求，因为深度睡眠时不需要RF时钟。在BLE参考时钟寄存器在深度睡眠期间达到BLE唤醒实例寄存器中的值之前，可编程超时，BLE链路层再次激活BLE系统时钟请求。如果RSIM模块能够在此事件上产生中断，并且该中断在LLWU模块中配置为唤醒芯片，BLE链接层在退出DSM（深度睡眠模式）之前唤醒整个SoC。
+
+## 10.2 何时/如何 进入低功耗状态
+
+当整个系统空闲且所有软件层都同意时，系统应进入低功耗状态。对于此用例，定义了必须在系统中具有最低优先级的空闲任务，其用于进入和退出低功耗状态。因此，系统在空闲任务中进入低功耗状态，该任务仅在其他任务没有事件时运行。
+
+在该任务中，低功耗示例调用静态函数 AppIdle。为此示例执行以下步骤：
+* 检查设备是否可以进入睡眠状态（所有调用了 PWR_DisallowDeviceToSleep 的软件层都已调回 PWR_AllowDeviceToSleep）
+* 设备通过调用 PWR_EnterLowPower 进入低功耗状态
+* 从睡眠状态返回时，应用程序会检查唤醒原因。如果设备需要在唤醒时作出反应，则调用 PWR_DisallowDeviceToSleep 并调用特定函数。在此示例中，节点处理由键盘按下导致的唤醒
+    ```c
+    staticvoidApp_Idle(void)
+    {
+        PWRLib_WakeupReason_t wakeupReason;
+        
+        if ( PWR_CheckIfDeviceCanGoToSleep() )
+        {
+            /* Enter Low-Power */
+            wakeupReason = PWR_EnterLowPower();
+
+    #if gFSCI_IncludeLpmCommands_c
+        /* Send Wake Up indication to FSCI */
+        FSCI_SendWakeUpIndication();
+    #endif
+
+    #if gKBD_KeysCount_c > 0
+        /* Woke up on Keyboard Press */
+        if (wakeupReason.Bits.FromKeyBoard)
+        {
+            KBD_SwitchPressedOnWakeUp();
+            PWR_DisallowDeviceToSleep();
+        }
+    #endif
+        }
+    }
+    ```
+* 只有在 PWR_AllowDeviceToSleep 被调回且空闲任务再次运行后，节点才会重新进入睡眠状态
+
+系统上运行的每个 软件层/实体 都可以通过调用 PWR_DisallowDeviceToSleep 来阻止它进入低功耗状态。系统会保持唤醒状态，直到调用 PWR_DisallowDeviceToSleep 的所有软件层都调回 PWR_AllowDeviceToSleep 并且系统运行到空闲任务。MCU根据启动的定时器类型进入睡眠或深度睡眠。低功耗定时器是唯一不会阻止系统进入深度睡眠状态的定时器。如果启动任何其他定时器，则MCU进入睡眠而不是深度睡眠。用户应该停止除低功耗定时器之外的所有定时器。注意，启动定时器的函数，如 LED_StartFlash，会阻止系统进入深度睡眠状态。
+
+## 10.3 深度睡眠模式
+
+该元件实现了四种低功耗模式。用户可以使用 PWR_ChangeDeepSleepMode 函数在运行时切换模式。默认的低功耗模式由头文件 **PWR_Configuration.h** 中定义的值 cPWR_DeepSleepMode 来选择。
+
+### 10.3.1 深度睡眠模式1
+
+这种低功耗模式设计用于BLE栈处于活动状态时。广告中的节点示例如下所示：
+
+![Figure 12. Deep Sleep Mode 1 usage example](../Pic/BLE%20Application%20Developer's%20Guide-Figure12.jpg)
+
+在此模式下，MCU进入LLS3，并且BLE链路层进入深度睡眠状态。SoC可以通过（使用LLWU模块）在 BOARD_LLWU_PIN_ENABLE_BITMAP 中配置为唤醒源的GPIO、LPTMR超时，或BLE链路层唤醒中断（BLE_LL 参考时钟到达唤醒即使寄存器）从该模式唤醒。LPTMR定时器用于测量MCU在深度睡眠中花费的时间，以便在唤醒时同步低功耗定时器。有两种方法可以使用此模式：
+* BLE栈决定它可以进入低功耗并调用 PWR_AllowDeviceToSleep。如果没有其他软件实体阻止系统进入深度睡眠（所有调用了 PWR_DisallowDeviceToSleep 的软件层都调回了 PWR_AllowDeviceToSleep）并且系统运行到空闲任务，则进入函数 PWR_EnterLowPower 并且系统准备进入低功耗模式1。BLE链路层状态会被检查，发现它不处于深度睡眠状态。BLE栈的一个函数会被调用以获得BLE链路层需要再次运行的最近时刻，并且使用该值对BLE链路层中的唤醒实例寄存器进行编程。然后将BLE链路层置于深度睡眠状态，MCU进入LLS3
+* BLE栈决定它可以进入低功耗并调用 PWR_BLE_EnterDSM， 然后调用 PWR_AllowDeviceToSleep。通过这种方式，BLE链路层立即进入深度睡眠状态，剩下MCU在空闲任务中进入LLS3。如果没有其他软件实体阻止系统进入深度睡眠并且系统运行到空闲任务，则进入函数 PWR_EnterLowPower 并且系统准备完成进入低功耗模式1。BLE链路层状态会被检查并发现它处于深度睡眠状态，因此MCU将自身置于LLS3并最终达到深度睡眠模式1
+
+在BLE链路层参考时钟寄存器达到唤醒寄存器中的值之前，超时为 cPWR_BLE_LL_OscStartupDelay + cPWR_BLE_LL_OffsetToWakeupInstant，BLE链路层唤醒整个SoC，系统恢复其活动。检查 **PWR_Configuration.h** 头文件中的两个定义。
+
+### 10.3.2 深度睡眠模式2
+
+这种低功耗模式设计用于BLE栈空闲时。在此模式下，MCU进入LLS3，并且BLE链路层进入深度睡眠状态。SoC通过（使用LLWU模块）在 BOARD_LLWU_PIN_ENABLE_BITMAP 中配置为唤醒源的GPIO或BLE链路层唤醒中断（BLE_LL 参考时钟寄存器到达唤醒实例寄存器）从此模式唤醒。LPTMR定时器用于测量MCU在深度睡眠中花费的时间，以便在唤醒时同步低功耗定时器。可以在编译时使用 **PWR_Configuration.h** 头文件中定义的 cPWR_DeepSleepDurationMs 或在运行时调用 PWR_SetDeepSleepTimeInMs 函数来配置深度睡眠的持续时间。
+
+最大深度睡眠持续时间限制为 40959ms。
+
+### 10.3.3 深度睡眠模式3
+
+这种低功耗模式设计用于BLE栈空闲时。在此模式下，MCU进入LLS3，并且BLE链路层保持空闲。SoC通过（使用LLWU模块）在 BOARD_LLWU_PIN_ENABLE_BITMAP 中配置为唤醒源的GPIO或BLE链路层唤醒中断从此模式唤醒。LPTMR定时器用于测量MCU在深度睡眠中花费的时间，以便在唤醒时同步低功耗定时器。可以在编译时使用 **PWR_Configuration.h** 头文件中定义的 cPWR_DeepSleepDurationMs 或在运行时调用 PWR_SetDeepSleepTimeInMs 函数来配置深度睡眠的持续时间。
+
+此模式下的最大可配置深度睡眠持续时间为 65535000ms（18.2小时）。
+
+定期扫描的节点示例如下所示：
+
+![Figure 13. Deep Sleep Mode 3 usage example](../Pic/BLE%20Application%20Developer's%20Guide-Figure13.jpg)
+
+### 10.3.4 深度睡眠模式4
+
+这是所有模式中的最低功耗模式。这种低功耗模式设计用于BLE栈空闲时。在此模式下，MCU进入 VLLS0/VLLS1，并且BLE链路层保持空闲。SoC通过（使用LLWU模块）在 BOARD_LLWU_PIN_ENABLE_BITMAP 中配置为唤醒源的GPIO从此模式唤醒。由于通过重置序列退出该深度睡眠模式，因此不对低功耗定时器进行同步。配置此模式有两个定义：
+* cPWR_DCDC_InBypass 配置使用的VLLS模式。如果此定义为TRUE，则MCU进入VLLS0，否则MCU进入VLLS1，因为在DCDC降压或升压模式下不允许VLLS0
+* cPWR_POR_DisabledInVLLS0。此定义仅在 cPWR_DCDC_InBypass 为TRUE时才有意义，因此MCU进入VLLS0模式。如果为TRUE，则此定义禁用VLLS0中的POR电路，从而使深度睡眠模式成为最低功耗模式
+
+### 10.3.5 深度睡眠模式5
+
+这种低功耗模式设计用于BLE栈空闲时。在此模式下，MCU进入VLLS2，并且BLE链路层保持空闲。SoC通过（使用LLWU模块）在 BOARD_LLWU_PIN_ENABLE_BITMAP 中配置为唤醒源的GPIO从此模式唤醒。
+
+此模式具有部分SRAM保留。保留4KB的RAM（从0x20000000到0x20000FFF）。
+
+### 10.3.6 深度睡眠模式6
+
+这种低功耗模式设计用于BLE栈空闲时。在此模式下，MCU进入STOP。SoC通过以下方式从此模式唤醒：
+* 通过使用LLWU模块在 BOARD_LLWU_PIN_ENABLE_BITMAP 中配置为唤醒源的GPIO 
+* 使用LLWU模块的LPTMR超时。LPTMR定时器用于测量MCU在深度睡眠中花费的时间，以便在唤醒时同步低功耗定时器。可以在编译时使用 **PWR_Configuration.h** 头文件中定义的 cPWR_DeepSleepDurationMs 或在运行时调用 PWR_SetDeepSleepTimeInMs 函数来配置深度睡眠的持续时间。此模式下的最大可配置深度睡眠持续时间为 65535000ms（18.2小时）
+* UART中断
+* 来自BLE链路层的无线电中断
+
+可在下表中找到可用电源模式的摘要：
+
+![Table 3. Available power modes](../Pic/BLE%20Application%20Developer's%20Guide-Table3.jpg)
+
+## 10.4 低功耗使用示例
+
+### 10.4.1 BLE栈空闲时使用低功耗
+
+在这种情况下使用的最有效的低功耗模式是深度睡眠模式3，同时也保留SRAM。应用程序还必须将 cPWR_DeepSleepDurationMs 配置为允许正在运行的低功耗定时器在到期之前更新的值。例如，如果应用程序想要每30秒唤醒以扫描一次，则宏的值不得超过30000。
+
+要允许设备进入睡眠状态，请在栈初始化或断开连接后调用 PWR_ChangeDeepSleepMode 和 PWR_AllowDeviceToSleep。
+
+```c
+PWR_ChangeDeepSleepMode(3);
+PWR_SetDeepSleepTimeInMs(cPWR_DeepSleepDurationMs);
+PWR_AllowDeviceToSleep();
+```
+
+### 10.4.2 广告时使用低功耗
+
+广告要求BLE链路层发送广告包并在配置的间隔上侦听连接请求，而不需要更高层的介入。因此，深度睡眠模式1是此用例的最佳候选者。
+
+要允许设备进入深度睡眠模式1，请调用 PWR_ChangeDeepSleepMode 和 PWR_AllowDeviceToSleep，在调用函数后立即开始广告。应用程序还必须将 cPWR_DeepSleepDurationMs 配置为一个值，该值允许正在运行的低功耗定时器在到期之前进行更新。
+
+```c
+BleApp_Advertise();
+PWR_ChangeDeepSleepMode(1);
+PWR_SetDeepSleepTimeInMs(cPWR_DeepSleepDurationMs);
+PWR_AllowDeviceToSleep();
+```
+
+MCU进入睡眠状态并在接收到连接请求或在链路层唤醒超时时唤醒。BLE在广告事件间进入DSM。
+
+当接收到连接请求时，节点不允许睡眠以为服务发现等其他程序做好准备。
+
+```c
+PWR_DisallowDeviceToSleep();
+```
+
+### 10.4.3 扫描时使用低功耗
+
+扫描要求BLE链路层在整个程序中处于运行模式。扫描完成后设备可以进入睡眠状态，或者保持活动状态（找到合适的设备）。这种情况下，深度睡眠模式2和3是最佳候选者。选择哪个模式取决于两次连续扫描之间的间隔，因为深度睡眠模式2的最大超时时间为 40959ms。
+
+要允许设备进入深度睡眠模式2，请调用 PWR_ChangeDeepSleepMode 和 PWR_AllowDeviceToSleep。应用程序还必须将 cPWR_DeepSleepDurationMs 配置为一个值，该值允许正在运行的低功耗定时器在到期之前进行更新。
+
+```c
+PWR_ChangeDeepSleepMode(2);
+PWR_SetDeepSleepTimeInMs(cPWR_DeepSleepDurationMs);
+PWR_AllowDeviceToSleep();
+```
+
+当控制器关闭扫描时，可以在 gScanStateChanged_c 事件上完成此操作。当再次扫描时，设备可以被低功耗定时器超时时唤醒。
+
+### 10.4.4 在连接中使用低功耗
+
+连接期间的低功耗需要考虑连接间隔、从设备延迟和监视超时。BLE链路层必须定期发送空PDU以维持连接，因此它必须在DSM中。因此，深度睡眠模式1是此用例的最佳候选者。
+
+应该在 gConnEvtConnected_c 事件上调用该函数。
+
+```c
+case gConnEvtConnected_c:
+{
+    PWR_ChangeDeepSleepMode(1);
+    PWR_SetDeepSleepTimeInMs(cPWR_DeepSleepDurationMs);
+    PWR_AllowDeviceToSleep();
+}
+```
 
 ------------------------------------------------------------------------------------------------------------------------
 
