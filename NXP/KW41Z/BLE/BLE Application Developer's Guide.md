@@ -2463,9 +2463,9 @@ BleServDisc_FindService(peerDeviceId, gBleUuidType128_c, (bleUuid_t*)
     * 该宏是一个4字节的SIG定义的UUID，以0xZZZZZZZZ格式写入
 * PRIMARY_SERVICE_UUID128 (name, uuid128)
     * uuid128 是在 **gatt_uuid128.h** 文件中自定义UUID的友好名称
-* SECONDARY _SERVICE (name, uuid16)
+* SECONDARY_SERVICE (name, uuid16)
 * SECONDARY_SERVICE_UUID32 (name, uuid32)
-* SECONDARY _SERVICE_UUID128 (name, uuid128)
+* SECONDARY_SERVICE_UUID128 (name, uuid128)
     * 这三个都与主要服务声明类似
 
 #### 7.1.2.2 包含声明宏
@@ -2504,7 +2504,7 @@ BleServDisc_FindService(peerDeviceId, gBleUuidType128_c, (bleUuid_t*)
 以下宏用于声明特征：
 * CHARACTERISTIC (name, uuid16, properties)
 * CHARACTERISTIC_UUID32 (name, uuid32, properties)
-* CHARACTERISTIC _UUID128 (name, uuid128,properties)
+* CHARACTERISTIC_UUID128 (name, uuid128,properties)
     * 有关uuidXXX参数说明，请参阅服务声明
 
 properties 参数是位掩码。标志在 gattcharactertiesbitfields_t 中定义。
@@ -2512,9 +2512,9 @@ properties 参数是位掩码。标志在 gattcharactertiesbitfields_t 中定义
 #### 7.1.3.2 声明特征值
 
 特征值声明紧跟在特征声明之后，并使用以下宏之一：
-* VALUE (name, uuid16, permissions, valueLength, valueByte1, valueByte2, …)
-* VALUE_UUID32 (name, uuid32, permissions, valueLength, valueByte1, valueByte2, …)
-* VALUE _UUID128(name, uuid128, permissions, valueLength, valueByte1, valueByte2, …)
+* VALUE(name, uuid16, permissions, valueLength, valueByte1, valueByte2, …)
+* VALUE_UUID32(name, uuid32, permissions, valueLength, valueByte1, valueByte2, …)
+* VALUE_UUID128(name, uuid128, permissions, valueLength, valueByte1, valueByte2, …)
     * 有关uuidXXX参数说明，请参阅服务声明
     * permissions 参数是位掩码；标志在 gattAttributePermissionsBitFields_t 中定义
         * valueLength 是特征值要分配的字节数。在此参数之后，应有相同字节数的字节数组以0xZZ格式来表示此特征的初始值
