@@ -52,54 +52,55 @@
 
 # **1. Introduction**
 
-本文档说明如何开始开发一个 Thread IPv6 mesh 无线协议应用程序。
+本文档说明如何开始开发一个Thread IPv6 mesh无线协议应用程序。
 
-该文档还描述了应用程序执行的 stack 的配置和初始化，以及对特定用例的 API 调用的介绍。
+该文档还描述了应用程序执行的stack的配置和初始化，以及对特定用例的API调用的介绍。
 
-下面是与执行 stack 操作相关的演示应用程序模块的详细描述。
+下面是与执行stack操作相关的演示应用程序模块的详细描述。
+* Scanning for networks
+* Joining initiation
+* Commissioning parameters
+* Selecting a Parent
+* Inspecting IP address configuration
+* Access the IP data plane via Sockets and CoAP sessions
+* Low-power-specific configuration
 
-* 扫描网络
-* 加入初始化
-* Commissioning 参数
-* 选择父系
-* 检查 IP 地址配置
-* 通过 Sockets 和 CoAP 会话访问 IP 数据平面
-* 低功耗特性配置
+------------------------------------------------------------------------------------------------------------------------
 
 # **2. Example Applications**
 
-Thread stack 与 IAR® Embedded Workbench 和 MCUXpresso example applications 一起提供，它们是应用程序开发者的起点。示例应用程序是 Thread 设备的主要类别模板：
+Thread stack与IAR® Embedded Workbench和MCUXpresso example applications一起提供，它们是应用程序开发者的起点。示例应用程序是Thread设备的主要类别模板：
+* Router Eligible Device – 一种独立的Thread无线节点，其具有mesh路由能力，还可以充当Parent、转发、缓冲数据和代表附着在其上的child End Devices完成网络管理功能
+* End Device – 一种独立的Thread无线节点，其无线收发器总是打开，但是可能没有板载资源来缓冲和转发 wireless mesh 中的routed data，或者充当Parent
+* Low Power End Device – 一个类似End Device的应用模板，其主要的特点是：设备预配置为具有低功耗状态的微控制器，并且在设备生命周期的大部分时间内关闭无线电；该设备在几秒钟的间隔内周期“唤醒”，并主动轮询其Parent Router发送给它的数据，或者可以选择通过Parent Router向网络发送数据
+* Border Router – 在部署时，启用IP stack以在Thread IEEE®802.15.4/6LoWPAN wireless mesh接口和auxiliary接口之间通过Thread network border转发消息；因此，消息可以到达上游设施，例如标准家庭局域网（LAN）或因特网和云服务器
+* Host Controlled Device – 一种实现扩展、全功能、具有stack的Router capable configuration的应用程序，并激活一个UART/SPI/USB外围设备，该外围设备承载Thread Host Control Interface(THCI)协议帧，以便由host应用程序处理器或工具驱动Thread stack微控制器
 
-* Router Eligible Device – 一种独立的 Thread 无线节点，其具有 mesh routing capabilities，还可以充当父系节点、转发、缓冲数据和代表附加的子终端设备完成网络管理功能
-* End Device – 一种独立的 Thread 无线节点，其无线收发器总是打开，但是可能没有板载资源来缓冲和转发 wireless mesh 中的路由数据，或者充当父系节点
-* Low Power End Device – 一个类似 End Device 的应用模板，其主要的特点是：设备预配置为具有低功耗状态的微控制器，并且在设备生命周期的大部分时间内关闭无线电；该设备在几秒钟的间隔内周期“唤醒”，并主动轮询其父系路由器发送给它的数据，或者可以选择通过父系路由器向网络发送数据
-* Border Router – 在部署时，启用 IP stack 以在 Thread IEEE®802.15.4/6LoWPAN wireless mesh 接口和 auxiliary 接口之间通过 Thread network border 转发 messages；因此，messages 可以到达 upstream infrastructure，例如标准家庭局域网（LAN）或因特网和云服务器
-* Host Controlled Device – 一种实现扩展、全功能、具有 stack 的 Router capable configuration 的应用程序，并激活一个 UART/SPI/USB 外围设备，该外围设备承载 Thread Host Control Interface(THCI)协议帧，以便由 host 应用程序处理器或工具驱动 Thread stack 微控制器
-
-应用程序共享一个类似的高级工具链项目结构，通过起点、应用程序文件、stack 和系统配置来区分。
+应用程序共享一个类似的高级工具链项目结构，通过起点、应用程序文件、stack和系统配置来区分。
 
 有关示例应用程序的更多详情，请参阅 Kinetis Thread Stack Demo Applications User’s Guide(document KTSDAUG)。
+
+------------------------------------------------------------------------------------------------------------------------
 
 # **3. Application Architecture**
 
 ## **3.1 Overview**
 
-本节介绍由 Kinetis Thread Stack 示例应用程序实现的常规应用程序结构和体系结构，并推荐其作为新应用程序的 模板/起点。
+本节介绍由Kinetis Thread Stack示例应用程序实现的常规应用程序结构和体系结构，并推荐其作为新应用程序的 模板/起点。
 
 Router Eligible Device 项目仅用作基础示例，其他示例仅在提及其区分特征时使用。
 
-建议应用程序开发者选择与其需要的应用程序更接近的示例模板。但是，在测试或部署任何设备时，需要 router capable device 来引导新的网络实体，并让其他设备（包括独立终端设备）加入网络。
+建议应用程序开发者选择与其需要的应用程序更接近的示例模板。但是，在测试或部署任何设备时，需要具有路由能力的设备来引导新的网络实体，并让其他设备（包括独立end devices）加入网络。
 
 ## **3.2 IAR Embedded Workbench application project structure**
 
-Router Eligible Device 的基础示例可以从 **\boards\frdmkw41z\wireless_examples\thread\router_eligible_device\freertos\iar** 中访问并加载到 IAR Embedded Workbench version 7.80 或更高版本中。使用与 FRDM-KW41Z 开发平台对应的 frdmkw41z 配置作为基础示例。在下游子文件夹中，为 FreeRTOS OS 提供项目。FreeRTOS OS 项目被用作以下示例的基础。workspace 例子是：
+Router Eligible Device 的基础示例可以从 \boards\frdmkw41z\wireless_examples\thread\router_eligible_device\freertos\iar 中访问并加载到IAR Embedded Workbench version 7.80或更高版本中。使用与FRDM-KW41Z开发平台对应的frdmkw41z配置作为基础示例。在下游子文件夹中，为FreeRTOS OS提供项目。FreeRTOS OS项目被用作以下示例的基础。workspace例子是：
 
 **\boards\frdmkw41z\wireless_examples\thread\router_eligible_device\freertos\iar\ router_eligible_device.eww**
 
-将 workspace 文件启动到 IAR EWARM 工具中可以在窗口左侧的 Workspace panel 中显示项目和单个文件组及文件组织。
+将workspace文件启动到IAR EWARM工具中可以在窗口左侧的Workspace panel中显示项目和单个文件组及文件组织。
 
-Thread 应用程序 workspace 包含一个独立的 IAR 项目：
-
+Thread应用程序workspace包含一个独立的IAR项目：
 * router_eligible_device – 主应用程序项目，配置为构建时输出二进制 S-Record(*.srec)文件，该文件可以加载到设备固件上运行。
 
 下图显示了主应用程序项目文件组结构的扩展以及每个组中文件的功能。
@@ -108,50 +109,47 @@ Thread 应用程序 workspace 包含一个独立的 IAR 项目：
 
 ## **3.3 IAR Embedded Workbench compile time configuration**
 
-Thread stack 应用程序的编译时配置通过一组 IAR EWARM 和 C 模块结构（主要是预处理器（宏）定义）进行管理。
+Thread stack应用程序的编译时配置通过一组IAR EWARM和C模块结构（主要是预处理器（宏）定义）进行管理。
 
 ### **3.3.1 IAR Embedded Workbench project options configuration**
 
-配置的设置主要包含在 IAR Project Options panel 和 **\middleware\wireless\nwk_ip_1.2.4\examples\common** 以及 **\middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config** 项目中的文件组中包含的 *.h 头文件。
+配置的设置主要包含在IAR Project Options panel和 \middleware\wireless\nwk_ip_1.2.4\examples\common 以及 \middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config 项目中的文件组中包含的 *.h 头文件。
 
-要检查 IAR Project Options panel 中设置的配置选项，请右键单击应用程序项目，如 Figure 1 所示。
+要检查IAR Project Options panel中设置的配置选项，请右键单击应用程序项目，如 Figure 1 所示。
 
 下图显示了全局预处理器选项。这些包括：
-
-* 将 **\middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config** 中的文件设置为 Preinclude 文件，每当调用模块编译时默认包含该文件
-* 预处理器定义的符号，包含应用程序项目的系统和 stack 的主要全局设置
+* 将 \middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config 中的文件设置为 Preinclude 文件，每当调用模块编译时默认包含该文件
+* 预处理器定义的符号，包含应用程序项目的系统和stack的主要全局设置
 
 ![Figure 2.](../Pic/Kinetis%20Thread%20Stack%20Application%20Developer's%20Guide-Figure2.jpg)
 
 同样，链接器部分包含应用程序设置，这些应用程序设置在链接器创建二进制可执行文件时应用。这些包括：
-
 * 链接器文件用于代码和数据的设备内存布局
-* 影响 OTAP 或串行（FSCI）引导加载程序是否包含在固件存储器映射中的符号定义，如果保留 nvm 段，则允许在 RAM 存储器中放置中断向量表，允许使用内部闪存来存储一个磁盘映像，配置用于 nvm 的闪存扇区的数量，并启用首次运行时用于 nvm 的闪存扇区的擦除
+* 影响OTAP或串行（FSCI）引导加载程序是否包含在固件存储器映射中的符号定义，如果保留nvm段，则允许在RAM存储器中放置中断向量表，允许使用内部闪存来存储一个磁盘映像，配置用于nvm的闪存扇区的数量，并启用首次运行时用于nvm的闪存扇区的擦除
 
 ![Figure 3. EWARM Project Options Configuration – linker settings](../Pic/Kinetis%20Thread%20Stack%20Application%20Developer's%20Guide-Figure3.jpg)
 
 ### **3.3.2 IAR Embedded Workbench header file configuration**
 
-通过 **\middleware\wireless\nwk_ip_1.2.4\examples\common** 中的头文件和 **\middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config** 中 Preinclude 头文件管理 stack 和应用程序编译时配置的其余部分。 **\middleware\wireless\nwk_ip_1.2.4\examples\common** 中的头文件的设置是应用在所有应用程序项目的默认全局设置。如果应用程序必须修改一组特定的全局设置，则可以通过 **\middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config** 中的 Preinclude 头文件覆盖它们。Preinclude 文件具有更高的优先级，因为它是在为源模块调用编译器时首先处理的。下图显示了头文件设置优先的方式，并且可以为应用程序的特定目的进行覆盖：
+通过 \middleware\wireless\nwk_ip_1.2.4\examples\common 中的头文件和 \middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config 中 Preinclude 头文件管理stack和应用程序编译时配置的其余部分。 \middleware\wireless\nwk_ip_1.2.4\examples\common 中的头文件的设置是应用在所有应用程序项目的默认全局设置。如果应用程序必须修改一组特定的全局设置，则可以通过 \middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config 中的 Preinclude 头文件覆盖它们。Preinclude 文件具有更高的优先级，因为它是在为源模块调用编译器时首先处理的。下图显示了头文件设置优先的方式，并且可以为应用程序的特定目的进行覆盖：
 
 ![Figure 4. Compile time configuration setting header files structure and precedence](../Pic/Kinetis%20Thread%20Stack%20Application%20Developer's%20Guide-Figure4.jpg)
 
 ## **3.4 MCUXpresso IDE application project structure**
 
-如 Kinetis Thread Stack Demo Applications User’s Guide 的第 7 部分所示，成功加载 sdk 后，可以访问并加载适用于 Router Eligible Device 的基础示例，并将其加载到 MCUXpresso IDE version 10.1.1 或更高版本中。
+如 Kinetis Thread Stack Demo Applications User’s Guide 的第7部分所示，成功加载sdk后，可以访问并加载适用于Router Eligible Device的基础示例，并将其加载到MCUXpresso IDE version 10.1.1或更高版本中。
 
-可以使用导入 SDK example(s)… link，从 Quickstart Panel 加载项目。
+可以使用导入SDK example(s)… link，从Quickstart Panel加载项目。
 
-在下游子文件夹中，为 FreeRTOS OS 提供项目。 FreeRTOS OS 项目被用作以下示例的基础。
+在下游子文件夹中，为FreeRTOS OS提供项目。FreeRTOS OS项目被用作以下示例的基础。
 
 ![Figure 5. MCUXpresso IDE application project structure](../Pic/Kinetis%20Thread%20Stack%20Application%20Developer's%20Guide-Figure5.jpg)
 
-将 workspace 文件启动到 MCUXpresso IDE 工具中，在窗口左侧的 C/C++ Projects 面板中显示项目和单个文件组和文件组织。
+将workspace文件启动到MCUXpresso IDE工具中，在窗口左侧的C/C++ Projects面板中显示项目和单个文件组和文件组织。
 
 ![Figure 6. MCUXpresso IDE projects view](../Pic/Kinetis%20Thread%20Stack%20Application%20Developer's%20Guide-Figure6.jpg)
 
-Thread 应用程序 workspace 包含一个独立的 MCUXpresso 项目。
-
+Thread应用程序workspace包含一个独立的MCUXpresso项目。
 * router_eligible_device – 主应用程序项目，配置为构建时输出二进制 S-Record(*.srec)文件，该文件可以加载到设备固件上运行。
 
 下图显示了主应用程序项目文件组结构的扩展以及每个组中文件的功能。
@@ -160,30 +158,28 @@ Thread 应用程序 workspace 包含一个独立的 MCUXpresso 项目。
 
 ## **3.5 MCUXpresso IDE compile time configuration**
 
-Thread stack 应用程序的编译时配置通过一组 MCUXpresso 和 C 模块结构（主要是预处理器（宏）定义）进行管理。
+Thread stack应用程序的编译时配置通过一组MCUXpresso和C模块结构（主要是预处理器（宏）定义）进行管理。
 
 ### **3.5.1 MCUXpresso IDE project options configuration**
 
-配置设置主要包含在 MCUXpresso Project Settings panel 和 **\middleware\wireless\nwk_ip_1.2.4\examples\common** 和 **\middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config** 项目中的文件组中包含的 *.h 头文件。
+配置设置主要包含在MCUXpresso Project Settings panel和 \middleware\wireless\nwk_ip_1.2.4\examples\common 和 \middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config 项目中的文件组中包含的 *.h 头文件。
 
-要查看 MCUXpresso Project Settings panel 中设置的配置选项，请右键单击应用程序项目，然后选择 “Properties” 选项。
+要查看MCUXpresso Project Settings panel中设置的配置选项，请右键单击应用程序项目，然后选择“Properties”选项。
 
-下图显示了全局预处理器选项。 这些包括以下内容：
-
-* 将 **\middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config\config.h** 处的文件设置为 Preinclude 文件，每当调用源模块编译时默认包含该文件
-* 预处理器定义的符号，包含应用程序项目的系统和 stack 的主要全局设置
+下图显示了全局预处理器选项。这些包括以下内容：
+* 将 **\middleware\wireless\nwk_ip_1.2.4\examples\\\<application>\config\config.h** 处的文件设置为Preinclude文件，每当调用源模块编译时默认包含该文件
+* 预处理器定义的符号，包含应用程序项目的系统和stack的主要全局设置
 
 ![Figure 8. MCUXpresso IDE project options configuration – C compiler preprocessor settings](../Pic/Kinetis%20Thread%20Stack%20Application%20Developer's%20Guide-Figure8.jpg)
 
-与 IAR 相比，当前的 MCUXpresso 版本不支持预处理链接器文件。创建二进制可执行文件时应用的应用程序设置包含在链接程序文件中，该文件可从托管链接程序脚本部分找到。这些包括以下内容：
-
-* 影响 RTOS 堆内存大小的符号定义以及固件存储器映射中是否包含 OTAP 或串行（FSCI）引导加载程序。
+与IAR相比，当前的MCUXpresso版本不支持预处理链接器文件。创建二进制可执行文件时应用的应用程序设置包含在链接程序文件中，该文件可从托管链接程序脚本部分找到。这些包括以下内容：
+* 影响RTOS堆内存大小的符号定义以及固件存储器映射中是否包含OTAP或串行（FSCI）引导加载程序。
 
 ## **3.6 Run time bootstrapping and initialization**
 
-一旦 Thread 示例应用程序运行，FreeRTOS OS 会引导系统并最终运行 **\middleware\wireless\nwk_ip_1.2.4\examples\common\app_init.c** 中定义的默认 main_task 函数。该函数表示默认的 FreeRTOS 应用程序级（application-level）任务。该函数通过调用其特定的初始化函数来初始化所有其他系统和 IP stack 模块。注意，main_task 对 Thread 和 IP stack 初始化函数 THR_Init 的调用初始化了 core Thread stack 模块并创建了一个新的 FreeRTOS OS 任务，该任务运行 stack 功能，状态机和消息处理。在Thread 初始化时，将读取唯一的设备 ID，默认情况下，该 ID 作为 Thread 接口上使用的 factory EUI64 的后缀。函数 THR_Init 在模块 **\middleware\wireless\nwk_ip_1.2.4\examples\common\app_thread_init.c** 中定义。
+一旦Thread示例应用程序运行，FreeRTOS OS会引导系统并最终运行 **\middleware\wireless\nwk_ip_1.2.4\examples\common\app_init.c** 中定义的默认 main_task 函数。该函数表示默认的FreeRTOS应用程序级（application-level）任务。该函数通过调用其特定的初始化函数来初始化所有其他系统和IP stack模块。注意，main_task 对Thread和IP stack初始化函数 THR_Init 的调用初始化了core Thread stack模块并创建了一个新的FreeRTOS OS任务，该任务运行stack功能，状态机和消息处理。在Thread初始化时，将读取唯一的设备ID，默认情况下，该ID作为Thread接口上使用的 factory EUI64 的后缀。函数 THR_Init 在模块 **\middleware\wireless\nwk_ip_1.2.4\examples\common\app_thread_init.c** 中定义。
 
-作为其初始化的一部分，其他系统模块（例如 IEEE 802.15.4 MACPHY 链路层或处理串行接口通信（UART，USB，SPI和IIC）通信的阻塞式串行管理器）创建新的 FreeRTOS OS 任务，以允许非阻塞异步处理。每个新的系统模块 RTOS 任务通过 OS 抽象模块 EventWait API（OSA_EventWait）输入一个 while(1) 无限循环等待事件发信号给任务。这是为了能够在系统运行时无限期地处理各个模块的事件和消息处理。
+作为其初始化的一部分，其他系统模块（例如IEEE 802.15.4 MACPHY链路层或处理串行接口通信（UART，USB，SPI和IIC）通信的阻塞式串行管理器）创建新的FreeRTOS OS任务，以允许非阻塞异步处理。每个新的系统模块RTOS任务通过OS抽象模块 EventWait API（OSA_EventWait）输入一个 while(1) 无限循环等待事件发信号给任务。这是为了能够在系统运行时无限期地处理各个模块的事件和消息处理。
 
 在完成所有初始化之后，main_task 进入自己的 while(1) 循环中，在该循环中它会重复调用 APP_Handler 以服务高级应用程序事件和功能，并允许在空闲时进入低功耗状态（具备低功耗配置），执行挂起操作的非易失性存储器模块和重置看门狗。
 
