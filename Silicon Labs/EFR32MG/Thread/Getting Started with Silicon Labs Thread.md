@@ -1,0 +1,1 @@
+# **Getting Started with Silicon Labs Thread** <!-- omit in toc -->
