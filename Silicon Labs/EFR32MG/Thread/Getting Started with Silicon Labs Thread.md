@@ -144,14 +144,14 @@ PS: 下表为一些译词及其英文原型的对应表
 
     ![2.3 p15](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-2.3p15.jpg)
 
-    最后，如果您计划使用 IAR 作为编译器，请在文档列表中找到发行说明并检查软件版本要求，特别是对于 IAR-EWARM。 要安装 IAR-EWARM：
-    1. 在 Launcher 页面的 Resources 选项卡上，单击 Technical Support。
-    2. 向下滚动到页面底部，然后单击 Contact Support
-    3. 如果您尚未登录，请登录。
-    4. 单击 Software Releases 选项卡。在视图列表中选择 _Latest Thread Software。单击 Go。 在结果中是指向适当的 IAR-EWARM 版本的链接。
-    5. 下载 IAR 包（大约需要1小时）。
-    6. 安装 IAR。
-    7. 在 IAR 许可证向导中，单击 Register with IAR Systems to get an evaluation license。
-    8. 完成注册，IAR 将提供30天的评估许可。
+最后，如果您计划使用 IAR 作为编译器，请在文档列表中找到发行说明并检查软件版本要求，特别是对于 IAR-EWARM。 要安装 IAR-EWARM：
+1. 在 Launcher 页面的 Resources 选项卡上，单击 Technical Support。
+2. 向下滚动到页面底部，然后单击 Contact Support
+3. 如果您尚未登录，请登录。
+4. 单击 Software Releases 选项卡。在视图列表中选择 _Latest Thread Software。单击 Go。 在结果中是指向适当的 IAR-EWARM 版本的链接。
+5. 下载 IAR 包（大约需要1小时）。
+6. 安装 IAR。
+7. 在 IAR 许可证向导中，单击 Register with IAR Systems to get an evaluation license。
+8. 完成注册，IAR 将提供30天的评估许可。
 
 ------------------------------------------------------------------------------------------------------------------------
