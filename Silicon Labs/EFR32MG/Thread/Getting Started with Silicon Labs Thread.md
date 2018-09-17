@@ -28,6 +28,11 @@ PS: 下表为一些译词及其英文原型的对应表
     - [**2.1 连接无线入门套件(Connect the WSTK)**](#21-连接无线入门套件connect-the-wstk)
     - [**2.2 注册开发套件(Register your Development Kit)**](#22-注册开发套件register-your-development-kit)
     - [**2.3 安装 Simplicity Studio 和 Silicon Labs Thread(Install Simplicity Studio and the Silicon Labs Thread Stack)**](#23-安装-simplicity-studio-和-silicon-labs-threadinstall-simplicity-studio-and-the-silicon-labs-thread-stack)
+- [**3. 启动程序透视图中的功能(Functionality in the Launcher Perspective)**](#3-启动程序透视图中的功能functionality-in-the-launcher-perspective)
+    - [**3.1 下载更新或安装额外组件(Downloading Updates or Installing Additional Components)**](#31-下载更新或安装额外组件downloading-updates-or-installing-additional-components)
+    - [**3.2 更改首选的 SDK(Changing the Preferred SDK)**](#32-更改首选的-sdkchanging-the-preferred-sdk)
+    - [**3.3 更新适配器固件(Updating Adapter Firmware)**](#33-更新适配器固件updating-adapter-firmware)
+    - [**3.4 访问文档和其他资源(Accessing Documentation and Other Resources)**](#34-访问文档和其他资源accessing-documentation-and-other-resources)
 
 
 # **1. 产品概述(Product Overview)**
@@ -54,11 +59,11 @@ PS: 下表为一些译词及其英文原型的对应表
 
 ## **1.2 支持(Support)**
 
-您可以通过 Simplicity Studio 的 Resources 选项卡访问位于 https://www.silabs.com/support 的 Silicon Labs 支持入口，如 [3.4 访问文档和其他资源]() 中所述。如果您在开发期间有任何疑问，可以使用该入口联系客户支持。
+您可以通过 Simplicity Studio 的 Resources 选项卡访问位于 https://www.silabs.com/support 的 Silicon Labs 支持入口，如 [3.4 访问文档和其他资源](#34-访问文档和其他资源accessing-documentation-and-other-resources) 中所述。如果您在开发期间有任何疑问，可以使用该入口联系客户支持。
 
 ## **1.3 文档(Documentation)**
 
-可以通过 Simplicity Studio 访问协议栈文档，如 [3.4 访问文档和其他资源]() 中所述。Simplicity Studio 还提供了硬件文档和其他应用笔记的链接。有关 Silicon Labs Thread 软件的更多详细信息，请参阅发行说明。
+可以通过 Simplicity Studio 访问协议栈文档，如 [3.4 访问文档和其他资源](#34-访问文档和其他资源accessing-documentation-and-other-resources) 中所述。Simplicity Studio 还提供了硬件文档和其他应用笔记的链接。有关 Silicon Labs Thread 软件的更多详细信息，请参阅发行说明。
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -140,7 +145,7 @@ PS: 下表为一些译词及其英文原型的对应表
 
     ![2.3 p14](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-2.3p14.jpg)
 
-17. 然后，Launcher 透视图将填充与您的硬件和协议栈相关的软件组件和功能。请注意，如果您看到 Stackless 应用程序，请单击链接以更改首选 SDK，如 [3.2 更改首选 SDK]() 中所述。 按 [3.3 更新适配器固件]() 中的说明更新设备固件。
+17. 然后，Launcher 透视图将填充与您的硬件和协议栈相关的软件组件和功能。请注意，如果您看到 Stackless 应用程序，请单击链接以更改首选 SDK，如 [3.2 更改首选的 SDK](#32-更改首选的-sdkchanging-the-preferred-sdk) 中所述。 按 [3.3 更新适配器固件](#33-更新适配器固件updating-adapter-firmware) 中的说明更新设备固件。
 
     ![2.3 p15](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-2.3p15.jpg)
 
@@ -155,3 +160,77 @@ PS: 下表为一些译词及其英文原型的对应表
 8. 完成注册，IAR 将提供30天的评估许可。
 
 ------------------------------------------------------------------------------------------------------------------------
+
+# **3. 启动程序透视图中的功能(Functionality in the Launcher Perspective)**
+
+透视图由许多图块或窗格（称为视图）以及这些视图中的内容组成。您可以在透视图中执行许多功能，如下图所示。有关其中一些功能的更多信息将在本节后面提供。注意：您安装的版本可能与本节图形中显示的版本不同。
+
+在工具栏（1）上，您可以：
+* 登录或退出
+* 打开应用程序设置
+* 更新软件和固件（详情见 [3.1 下载更新或安装额外组件](#31-下载更新或安装额外组件downloading-updates-or-installing-additional-components) ）
+* 打开工具菜单以访问工具，如 Simplicity Commander 和 Energy Profiler
+* 在线搜索信息，包括社区论坛中的条目
+* 改变视图（2）。当您打开 Simplicity IDE 或其他工具时，右上角会显示其视图按钮。使用这些按钮可以轻松导航回 Launcher 视图或其他视图。您可以通过展开或重定位视图，添加或删除视图来更改各种视图的布局。要返回默认布局，请右键单击右上角的视图按钮，然后选择 Reset。
+
+在主视图中，您可以：
+* 更改首选的 SDK（3，详情见 [3.2 更改首选的 SDK](#32-更改首选的-sdkchanging-the-preferred-sdk) - 遗留的功能，很少使用）
+* 更改 debug 模式（4）
+* 更新适配器固件（5，详情见 [3.3 更新适配器固件](#33-更新适配器固件updating-adapter-firmware) ）
+* 创建多个部分的解决方案（6）。如果您针对涉及许多不同部分的复杂网络进行开发，则可以将它们全部添加到解决方案中，然后从列表中选择您正在处理的解决方案。您无需将硬件连接到计算机
+* 从 Getting Started 和其他选项卡（7）中访问 demos、examples、documentation 和其他 resources。使用选择卡中的按钮控件可以管理这些选项组（分别是折叠所有、展开所有、自定义和显示所有）。详情见 [3.4 访问文档和其他资源](#34-访问文档和其他资源accessing-documentation-and-other-resources)
+
+    ![3 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3p1.jpg)
+
+## **3.1 下载更新或安装额外组件(Downloading Updates or Installing Additional Components)**
+
+如果已安装组件的更新可用，则更新软件图标将为红色。如果 Simplicity Studio 检测到一个可用的更新，并且您在另一个透视图中，您将被通知一个更新可用。
+
+要下载新的或更新组件，请单击更新软件图标。点击包管理器。注意：如果您是基于新设备进行安装，或者想要安装一个新产品组，您也可以通过这个对话框进行安装。在随后的对话框中，单击 Home 按钮返回到此对话框。注意，Studio 没有显示已经安装的 GNU ARM 工具链等选项。
+
+![3.1 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.1p1.jpg)
+
+Simple Studio 在 Package Manager 对话框中显示了可用的更新或 SDKs。您可以更新全部或选择个别更新。单击 Package Manager 对话框中的选项卡，可以看到其他可用于安装的组件。使用过滤器缩小长列表。
+
+![3.1 p2](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.1p2.jpg)
+
+## **3.2 更改首选的 SDK(Changing the Preferred SDK)**
+
+这是一个遗留的功能。一般来说，大多数 Silicon Labs 协议栈用户将拥有一个可供他们使用的 SDK，即 Gecko SDK 套件。
+
+![3.2 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.2p1.jpg)
+
+在该套件中，您可以安装多个协议。在任何给定实例中使用的协议可以通过您选择的示例控制，也可以通过 “New Project” 界面控制您选择的协议栈。通常，您应该通过 Simplicity Studio 更新管理器添加或删除协议栈。 如果您需要在正常安装过程之外安装协议栈或 Gecko SDK 套件，您将收到单独的说明。
+
+## **3.3 更新适配器固件(Updating Adapter Firmware)**
+
+最初，启动器透视图可能不会显示可用的本地适配器固件。单击 “Download” 下载任何更新。
+
+![3.3 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.3p1.jpg)
+
+如果更新可用，单击 “Install” 安装固件。
+
+![3.3 p2](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.3p2.jpg)
+
+安装了当前更新后，将显示版本。如果另一个固件更新可用，Studio 会通知您。
+
+## **3.4 访问文档和其他资源(Accessing Documentation and Other Resources)**
+
+Getting Started 选项卡提供对演示，示例程序和协议栈相关文档的访问。要 显示/隐藏 特定类别，请单击自定义按钮。选择或取消类别，然后单击 “OK”。如果您安装了多个协议的 SDK，则按协议对类别进行分组，如下面（b）中的软件示例所示。
+
+![3.4 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.4p1.jpg)
+
+Documentation 选项卡结合了有关协议栈和硬件的文档。单击任何文档上的星形图标可将它移动到我最喜欢的文档列表。
+
+![3.4 p2](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.4p2.jpg)
+
+Compatible Tools 选项卡是通过 Tools 下拉菜单访问可用工具的另一种方式。
+
+![3.4 p3](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.4p3.jpg)
+
+Resources 选项卡提供对支持，营销材料和 Silicon Labs 社区的访问。
+
+![3.4 p4](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.4p4.jpg)
+
+------------------------------------------------------------------------------------------------------------------------
+
