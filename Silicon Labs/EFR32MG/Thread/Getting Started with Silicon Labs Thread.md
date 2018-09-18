@@ -33,6 +33,10 @@ PS: 下表为一些译词及其英文原型的对应表
     - [**3.2 更改首选的 SDK(Changing the Preferred SDK)**](#32-更改首选的-sdkchanging-the-preferred-sdk)
     - [**3.3 更新适配器固件(Updating Adapter Firmware)**](#33-更新适配器固件updating-adapter-firmware)
     - [**3.4 访问文档和其他资源(Accessing Documentation and Other Resources)**](#34-访问文档和其他资源accessing-documentation-and-other-resources)
+- [**4. 关于演示和示例(About Demos and Examples)**](#4-关于演示和示例about-demos-and-examples)
+    - [**4.1 演示(Demos)**](#41-演示demos)
+    - [**4.2 软件示例(Software Examples)**](#42-软件示例software-examples)
+    - [**4.3 从一个空白应用程序开始(Starting with a Blank Application)**](#43-从一个空白应用程序开始starting-with-a-blank-application)
 
 
 # **1. 产品概述(Product Overview)**
@@ -231,6 +235,83 @@ Compatible Tools 选项卡是通过 Tools 下拉菜单访问可用工具的另�
 Resources 选项卡提供对支持，营销材料和 Silicon Labs 社区的访问。
 
 ![3.4 p4](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-3.4p4.jpg)
+
+------------------------------------------------------------------------------------------------------------------------
+
+# **4. 关于演示和示例(About Demos and Examples)**
+
+因为从头开始开发应用程序是困难的，Silicon Labs Thread SDK 附带了许多内置演示和示例，涵盖了最常见的用例。演示是预先构建的应用程序映像，您可以立即运行。在构建应用程序映像之前，可以修改软件示例。与演示相同名称的软件示例提供演示功能。您看到的演示和示例由所选部件决定。如果您使用的是包含多个部件的自定义解决方案，请务必单击您正在使用的部件，以仅查看适用于该部件的那些部分。
+
+Silicon Labs 建议您从示例开始并根据您的需要进行修改，而不是从空白项目开始。这些示例提供了协议栈所需的默认配置以及可以构建的基本应用程序结构。然而，如果您想从空白项目开始的话，您可以这样做。
+
+
+## **4.1 演示(Demos)**
+
+演示是预先构建的应用程序示例，可以直接下载到设备中。
+
+Light（SoC）：简单的可调光灯，与 switch 应用程序配合使用，演示 Thread 网络中基本的 ZCL over IP 功能。可调光灯参考设计中提供了更完整的可调光灯示例。
+
+Switch：简单的调光开关。它与 light 应用程序一起在 Thread 网络中演示基本的 ZCL over IP 功能。
+
+要在您的设备上下载并运行演示，请下拉演示列表并单击演示。在下一个对话框的 Mode 下拉列表中，选择 Run。单击 Start。
+
+![4.1 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-4.1p1.jpg)
+
+## **4.2 软件示例(Software Examples)**
+
+> 注意：为 EFR32xG12 及更新的部件提供的示例包括 Silicon Labs Gecko Bootloader 示例。为所有兼容的 Simplicity Studio SDK 提供了示例。为 Gecko Bootloader 示例配置安全性时，必须使用 Simplicity Commander，而不是 Simplicity Studio IDE 界面。有关使用 Gecko Bootloader 的更多信息，请参阅 UG266：Silicon Labs Gecko Bootloader User Guide。
+
+Silicon Labs Thread 软件示例如下。标有 \* 的示例在启动器页面上没有贴图，但可以在 New Project 对话框中访问。请务必查看有关任何平台限制的完整示例说明。
+
+\*Border Router Management App：这是针对 Unix 主机的 Silicon Labs 边界路由器参考设计的一个组件，它演示了使用  Thread Group Commissioning App 进行设备 commissioning 以及在 Thread 网络和相邻 IP 网络之间的进行路由。
+
+\*Capacitive Touch Sensing Switch：该 ZLC over IP 传感器应用提供 magnetic reed switch 和 magnetic reed switch 的 开/关 状态，是 Silicon Labs 边界路由器参考设计的一个组件。
+
+Client：该 client 应用程序充当无线传感器网络中的数据传感器。它将信息报告给充当接收器的 server 节点。这两个 client 示例及相关的 server 示例展示了一个简单的，基于 CoAP 的专有消息传递模型，而不是使用 ZCL/IP 作为应用层。
+
+Client（Sleepy）：该 client 应用程序充当无线传感器网络中的嗜睡数据传感器。它将信息报告给充当接收器的 server 节点。
+
+\*Contact Sensor：这种 ZLC over IP 传感器应用程序提供 magnetic reed switch 和 device tamper detection 的 开/关 状态，是 Silicon Labs 边界路由器参考设计的一个组件。
+
+\*Dimmable Light：这种 ZCL over IP 灯应用程序为调光功能提供 pwm 控制，是边界路由器参考设计的一个组件。
+
+Light（SoC）：该 light 应用程序在 ZCL 网络中充当简单的可调光灯。它与 switch 示例应用程序一起使用，以演示 Thread 网络中基本的 ZCL over IP 功能。可调光灯参考设计中提供了更完整的可调光灯示例。
+
+\*Light（Host）：该 light 应用程序在 ZCL 网络中充当简单的可调光灯。它与 switch 示例应用程序一起使用，以演示 Thread 网络中基本的 ZCL over IP 功能。可调光灯参考设计中提供了更完整的可调光灯示例。
+
+NCP-SPI：该网络协处理器（NCP）应用程序支持通过 SPI 接口与主机应用程序进行通信。它可以按配置构建，也可以使用自定义扩展进行扩充，以进行初始化，主循环处理，事件 定义/处理 以及与主机的消息传递。
+
+NCP UART（Software Flow Control）：该 NCP 应用程序可以按配置构建，也可以使用自定义扩展进行扩充，以进行初始化，主循环处理，事件 定义/处理 以及与主机的消息传递。请注意，为了利用 WSTK 板的软件流控制，必须使用扩展头（”EXP“）引脚，因为 WSTK 上的 USB-to-serial 接口不支持软件流控制。
+
+NCP UART HW（Hardware Flow Control）：该网络协处理器（NCP）应用程序支持通过具有硬件流控制（RTS/CTS）的 UART 接口与主机应用程序进行通信。该 NCP 应用程序可以按配置构建，也可以使用自定义扩展进行扩充，以进行初始化，主循环处理，事件 定义/处理 以及与主机的消息传递。
+
+\*Occupancy Sensor：这种 ZLC over IP 传感器应用程序提供占用感应，温度测量，相对湿度测量和照度测量。它预期与边界路由器参考设计一起使用。
+
+\*OTA Server（Host）：该应用程序充当 ZCL 网络中的一个简单 OTA server。它适用于实现 OTA client 插件的任何设备（例如 light 或 switch 示例应用程序），以演示 Thread 网络中基本的 ZCL over IP 引导加载功能。
+
+Sensor/Actuator：这种 ZCL over IP 传感器/执行器 节点应用程序提供 LED0 和蜂鸣器（仅限 EM35x-DEV）控制，并报告温度和 button 0 的状态。它预期与边界路由器参考设计一起使用。
+
+Server（SoC）：该 server 应用程序充当无线传感器网络中的数据接收器。它从充当传感器的 client 节点收集信息。
+
+\*Server（Host）：该 server 应用程序充当无线传感器网络中的数据接收器。它从充当传感器的 client 节点收集信息。
+
+\*Smart Outlet：这种 ZCL over IP 传感器和执行器应用提供插座 开/关 控制，过流和过温关闭，以及功率，温度，相对湿度和照度测量。它预期与边界路由器参考设计一起使用。
+
+Switch：该 switch 应用程序充当 ZCL 网络中的简单调光器开关。它与 light 示例应用程序一起使用，以演示 Thread 网络中基本的 ZCL over IP 功能。
+
+Thread Test Application：这是一个非常简单的应用程序，可用于针对 Thread Test Harness 的 Silicon Labs Thread 协议栈互操作性测试。它的目的是提供一个示例应用程序，该应用程序可以针对这个工具进行测试。它启用了 Thread Test Harness CLI 插件以及使这些 CLI 命令正常运行所需的所有库和插件。
+
+\*Thread Test Host Application：这是一个非常简单的应用程序，可用于针对 Thread Test Harness 的 Silicon Labs Thread 协议栈互操作性测试。它的目的是提供一个示例应用程序，该应用程序可以针对这个工具进行测试。它启用了 Thread Test Harness CLI 插件以及使这些 CLI 命令正常运行所需的所有库和插件。
+
+## **4.3 从一个空白应用程序开始(Starting with a Blank Application)**
+
+虽然 Silicon Labs 强烈建议从其中一个示例应用程序开始开发，但如果您想从空白应用程序开始，则可以。
+1. 在启动器页面点击 New Project。
+2. 点击 Silicon Labs Thread，并点击 Next。
+3. 使用一个空白应用程序检查开始，并点击 Next。
+4. 命名您的应用程序，并点击 Next。
+5. （如果已安装 IAR 和 GCC）选择工具链。默认情况下，设置为 GCC，但您可以将工具链更改为 IAR。您也可以在项目打开后更改工具链。
+6. 点击 Finish。Simplicity IDE 将打开，但未配置任何内容。
 
 ------------------------------------------------------------------------------------------------------------------------
 
