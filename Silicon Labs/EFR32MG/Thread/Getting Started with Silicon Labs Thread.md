@@ -37,6 +37,12 @@ PS: 下表为一些译词及其英文原型的对应表
     - [**4.1 演示(Demos)**](#41-演示demos)
     - [**4.2 软件示例(Software Examples)**](#42-软件示例software-examples)
     - [**4.3 从一个空白应用程序开始(Starting with a Blank Application)**](#43-从一个空白应用程序开始starting-with-a-blank-application)
+- [**5. 应用程序开发入门(Getting Started with Application Development)**](#5-应用程序开发入门getting-started-with-application-development)
+    - [**5.1 选择一个示例应用(Selecting an Example Application)**](#51-选择一个示例应用selecting-an-example-application)
+    - [**5.2 生成应用程序源文件(Generating the Application Source Files)**](#52-生成应用程序源文件generating-the-application-source-files)
+    - [**5.3 编译和刷新应用程序(Compiling and Flashing the Application)**](#53-编译和刷新应用程序compiling-and-flashing-the-application)
+        - [**5.3.1 关于 Bootloading(About Bootloading)**](#531-关于-bootloadingabout-bootloading)
+        - [**5.3.2 构建和刷新文件(Building and Flashing Files)**](#532-构建和刷新文件building-and-flashing-files)
 
 
 # **1. 产品概述(Product Overview)**
@@ -312,6 +318,139 @@ Thread Test Application：这是一个非常简单的应用程序，可用于针
 4. 命名您的应用程序，并点击 Next。
 5. （如果已安装 IAR 和 GCC）选择工具链。默认情况下，设置为 GCC，但您可以将工具链更改为 IAR。您也可以在项目打开后更改工具链。
 6. 点击 Finish。Simplicity IDE 将打开，但未配置任何内容。
+
+------------------------------------------------------------------------------------------------------------------------
+
+# **5. 应用程序开发入门(Getting Started with Application Development)**
+
+在这些说明中，您将编译并加载两个示例应用程序 Light 和 Switch，以创建一个简单的 Thread 网络。在应用程序加载并且 Client 已加入到网络后，您可以在控制台和网络分析器中观察网络中的流量。
+
+在 Simplicity Studio 中使用示例应用程序时，您将执行以下步骤：
+1. 选择一个示例应用
+2. 生成应用程序文件
+3. 编译并将应用程序（and, the first time, a bootloader）刷新到无线板上
+4. 与应用程序交互
+
+以下各节将详细介绍这些步骤。这些程序用于带有 EFR32MG12 的 WSTK。注意：您的 SDK 版本可能晚于过程插图中显示的版本。
+
+SDK version 2.4 及更高版本包含对硬件外围设备配置和管理方式的许多更改。打开示例或生成代码时，您可能会看到以下对话框。始终单击 Yes。
+
+![5 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5p1.jpg)
+
+## **5.1 选择一个示例应用(Selecting an Example Application)**
+
+1. 在 Launcher 透视图中，单击示例应用程序，在本例中为 Switch。您的项目将基于此示例以及您在左侧的 Devices 或 Solutions 选项卡中选择的设备。
+    
+    ![5.1 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.1p1.jpg)
+
+2. 系统会询问您是否要切换到 Simplicity IDE。单击 Yes。
+
+    ![5.1 p2](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.1p2.jpg)
+
+3. Simplicity IDE 将在 AppBuilder 视图中打开新项目，并将焦点放在 General 选项卡上。
+
+    > 注意：您现在右上角的 Launcher 按钮旁边有一个 Simplicity IDE 按钮。
+    
+    确保显示的工具链是您要使用的工具链。如果同时安装了 IAR 和 GCC，则 GCC 是默认值。请注意，如果要编译小于 512 kB 的部件的示例（例如 EFR32xG1），则必须使用 IAR，因为 GCC 和 IAR 之间的代码大小不同。
+
+    ![5.1 p3](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.1p3.jpg)
+
+4. 要更改工具链，请单击 Edit Architecture。在结果对话框中，选择所需的工具链，然后单击 OK。
+
+    ![5.1 p4](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.1p4.jpg)
+
+> 注意：您还可以通过单击 Launcher 透视图中的 New Project 或从 Simplicity IDE 透视图中的 Project 菜单中选择 New，然后完成一系列对话框来启动示例项目。此路径允许您更多地输入项目创建，包括更改项目名称和修改默认板和部件选择。它还提供对其他示例的访问。
+
+## **5.2 生成应用程序源文件(Generating the Application Source Files)**
+
+1. 在 Simplicity IDE 中，点击 Generate。
+
+    ![5.2 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.2p1.jpg)
+
+    如果收到以下覆盖警告，请单击 OK。
+
+    ![5.2 p2](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.2p2.jpg)
+
+2. 生成完成后，将显示对话框报告结果。单击 OK。
+
+    ![5.2 p3](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.2p3.jpg)
+
+    生成的文件显示在 Project Explorer 视图中。
+
+    ![5.2 p4](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.2p4.jpg)
+
+## **5.3 编译和刷新应用程序(Compiling and Flashing the Application)**
+
+### **5.3.1 关于 Bootloading(About Bootloading)**
+
+由于此示例应用程序是使用一个 bootloader（在 HAL 选项卡下配置）构建的，因此您需要在首次运行应用程序之前加载 bootloader。
+
+![5.3.1 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.1p1.jpg)
+
+bootloader 是存储在预留闪存中的程序，其可以初始化设备，更新固件映像，并可能执行一些完整性检查。Silicon Labs 网络设备使用两种不同模式执行固件更新的 bootloader：standalone（也称为独立引导加载程序）和 application（也称为应用程序引导加载程序）。应用程序引导加载程序通过使用存储在内部或外部存储器中的更新映像重新编程闪存来执行固件映像更新。Silicon Labs 建议您始终随应用程序一起刷新引导加载程序映像，以便从一开始就适当分配闪存使用情况。 有关 bootloader 的更多信息，请参阅 UG103.6：Application Development Fundamentals: Bootloading。
+
+2017年3月，Silicon Labs 推出了 Gecko Bootloader，这是一个可通过 Simplicity Studio IDE 配置的代码库，用于生成可与各种 Silicon Labs 协议栈一起使用的 bootloader。Gecko Bootloader 与所有 EFR32xG 部件一起使用。
+
+Gecko Bootloader 使用专门的固件更新映像格式，更新映像以扩展名 \.gbl（GBL 文件）结尾。构建应用程序时，将生成 \.s37 和 GBL 文件。GBL 文件的确切格式取决于您选择的硬件。
+
+> 注意：使用 Gecko Bootloader 时，必须使用 Simplicity Commander 启用某些配置选项，例如安全功能。请参阅 UG266：Silicon Labs Gecko Bootloader User’s Guide。
+
+### **5.3.2 构建和刷新文件(Building and Flashing Files)**
+
+1. 生成项目文件后，单击顶部工具栏中的 Build 控件。如果 Build 控件未可用，请单击设备。您的示例应用程序将根据其构建配置进行编译。您可以随时在 Project Explorer 视图中更改构建配置，方法是右键单击项目并转到 Build Configurations \> Set Active。
+
+    ![5.3.2 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.2p1.jpg)
+
+    在构建期间，将在窗口中报告进度，该窗口可以在右下角后台运行。
+
+    ![5.3.2 p2](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.2p2.jpg)
+
+    构建完成在 Build Console 中报告。
+
+    ![5.3.2 p3](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.2p3.jpg)
+
+    构建应该没有错误地完成。如果发生任何错误，它们将在控制台中突出显示。联系技术支持以获取帮助。
+
+    ![5.3.2 p4](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.2p4.jpg)
+
+    > 注意：如果您在 Windows 平台上使用 GCC，并且遇到有关缺少的包含文件的构建错误，则可能遇到了有关 GCC 和长路径名的已知问题。如果发生这种情况，您可以通过打开 Windows 注册表并将 "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" 注册表项值设置为 1 来解决此问题。如果进行此调整后仍然遇到有关 GCC 和示例应用程序构建的问题，请联系 Silicon Labs 技术支持。
+
+2. 要加载应用程序和 bootloader 映像，请首先确保硬件显示在 Device 透视图中。展开无线板以显示部件号，因为您需要找到正确的 bootloader 文件。请注意，生成示例的文件夹显示在 General 选项卡上。
+
+    ![5.3.2 p5](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.2p5.jpg)
+
+3. 右键单击设备，然后选择 Upload Application。将显示 Application Image Upload 对话框。您的列表可能与以下示例不同。
+
+    ![5.3.2 p6](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.2p6.jpg)
+
+4. 浏览已编译应用程序的文件夹，然后选择 GBL 文件（有关详细信息，请参见 [5.3.1 关于 Bootloading](#531-关于-bootloadingabout-bootloading)）。
+
+    如果使用 GCC 编译映像，文件会在 \<folder on General tab\>\\GNU ARM vn\.n\.n - Default\. 中。
+
+    如果使用 IAR EWARM 编译映像，文件会在 \<folder on General tab\>\\IAR ARM - \<qualifier\>\. 中。
+
+5. 如果尚未加载 bootloader，请检查 Bootloader image，然后浏览到包含与无线板的部件号对应的预构建 bootloader 映像的文件夹。映像位于平台下的 Simplicity Studio bootloader 文件夹中（例如：C:\\SiliconLabs\\SimplicityStudio\\v4\\developer\\sdks\\gecko\_sdk\_suite\\\<version\>\\platform\\bootloader\\）。浏览到 sample-apps 和 bootloader-storage-spiflash 文件夹。选择相应的无线板部件号的 \.s37 文件
+，例如 “bootloader-storage-spiflash-efr32mg12p432f1024gl125.s37”。
+
+6. 检查 Erase Chip，确保在上传新映像之前擦除主闪存块。新用户通常会经常检查这一点：
+    * After uploading 选项是 Run（立即开始执行代码）和 Halt（等待事件，例如调试器连接或手动启动引导序列）。在刚开始开发期间，您通常会将此设置保留为 Run。
+    * Flash 选项确定存储位置，和是 Internal 和 External SPI。将选项设置为 Internal。
+    
+    您完成的对话框应类似于以下内容：
+
+    ![5.3.2 p7](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.2p7.jpg)
+
+7. 单击 OK。加载进度显示在右下方。当加载进度清除时，如果 LED1 正在缓慢打开和关闭，则您的应用程序已加载到 WSTK 上。
+
+    ![5.3.2 p8](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.2p8.jpg)
+
+8. 您可以右键单击该设备，然后选择 Launch Console。在控制台窗口中，单击 Serial 1 选项卡，然后按回车键。您应该看到与项目名称对应的提示。请注意，设备旁边的图标现在为绿色，表示与控制台的串行连接。
+
+    ![5.3.2 p9](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.2p9.jpg)
+
+现在重复 Switch 示例的过程，方法是单击右上角的 Launcher，然后按照 [5.1 选择一个示例应用](#51-选择一个示例应用selecting-an-example-application) 中的步骤进行操作。与 Light 示例一样，成功启动后，Switch 示例将打开和关闭 LED1，您可以在连接的控制台的 Serial1 选项卡上的提示中看到项目的名称。
+
+> 注意：在加载其他应用程序之前，必须断开与控制台的连接。右键单击该设备，然后选择 Disconnect。
 
 ------------------------------------------------------------------------------------------------------------------------
 
