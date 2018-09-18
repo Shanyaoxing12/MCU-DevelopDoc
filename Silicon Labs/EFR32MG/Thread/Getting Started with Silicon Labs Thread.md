@@ -44,7 +44,7 @@ PS: 下表为一些译词及其英文原型的对应表
         - [**5.3.1 关于 Bootloading(About Bootloading)**](#531-关于-bootloadingabout-bootloading)
         - [**5.3.2 构建和刷新文件(Building and Flashing Files)**](#532-构建和刷新文件building-and-flashing-files)
 - [**6. 创建网络(Creating a Network)**](#6-创建网络creating-a-network)
-- [7. 使用网络分析仪(Using the Network Analyzer)](#7-使用网络分析仪using-the-network-analyzer)
+- [**7. 使用网络分析仪(Using the Network Analyzer)**](#7-使用网络分析仪using-the-network-analyzer)
 - [**8. 下一步(Next Steps)**](#8-下一步next-steps)
 
 
@@ -268,7 +268,7 @@ Switch：简单的调光开关。它与 light 应用程序一起在 Thread 网�
 
 ## **4.2 软件示例(Software Examples)**
 
-> 注意：为 EFR32xG12 及更新的部件提供的示例包括 Silicon Labs Gecko Bootloader 示例。为所有兼容的 Simplicity Studio SDK 提供了示例。为 Gecko Bootloader 示例配置安全性时，必须使用 Simplicity Commander，而不是 Simplicity Studio IDE 界面。有关使用 Gecko Bootloader 的更多信息，请参阅 UG266：Silicon Labs Gecko Bootloader User Guide。
+> 注意：为 EFR32xG12 及更新的部件提供的示例包括 Silicon Labs Gecko Bootloader 示例。为所有兼容的 Simplicity Studio SDK 提供了示例。为 Gecko Bootloader 示例配置安全性时，必须使用 Simplicity Commander，而不是 Simplicity Studio IDE 界面。有关使用 Gecko Bootloader 的更多信息，请参阅 **UG266：Silicon Labs Gecko Bootloader User Guide**。
 
 Silicon Labs Thread 软件示例如下。标有 \* 的示例在启动器页面上没有贴图，但可以在 New Project 对话框中访问。请务必查看有关任何平台限制的完整示例说明。
 
@@ -390,13 +390,13 @@ SDK version 2\.4 及更高版本包含对硬件外围设备配置和管理方式
 
 ![5.3.1 p1](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-5.3.1p1.jpg)
 
-bootloader 是存储在预留闪存中的程序，其可以初始化设备，更新固件映像，并可能执行一些完整性检查。Silicon Labs 网络设备使用两种不同模式执行固件更新的 bootloader：standalone（也称为独立引导加载程序）和 application（也称为应用程序引导加载程序）。应用程序引导加载程序通过使用存储在内部或外部存储器中的更新映像重新编程闪存来执行固件映像更新。Silicon Labs 建议您始终随应用程序一起刷新引导加载程序映像，以便从一开始就适当分配闪存使用情况。 有关 bootloader 的更多信息，请参阅 UG103\.6：Application Development Fundamentals: Bootloading。
+bootloader 是存储在预留闪存中的程序，其可以初始化设备，更新固件映像，并可能执行一些完整性检查。Silicon Labs 网络设备使用两种不同模式执行固件更新的 bootloader：standalone（也称为独立引导加载程序）和 application（也称为应用程序引导加载程序）。应用程序引导加载程序通过使用存储在内部或外部存储器中的更新映像重新编程闪存来执行固件映像更新。Silicon Labs 建议您始终随应用程序一起刷新引导加载程序映像，以便从一开始就适当分配闪存使用情况。 有关 bootloader 的更多信息，请参阅 **UG103\.6：Application Development Fundamentals: Bootloading**。
 
 2017年3月，Silicon Labs 推出了 Gecko Bootloader，这是一个可通过 Simplicity Studio IDE 配置的代码库，用于生成可与各种 Silicon Labs 协议栈一起使用的 bootloader。Gecko Bootloader 与所有 EFR32xG 部件一起使用。
 
 Gecko Bootloader 使用专门的固件更新映像格式，更新映像以扩展名 **\.gbl**（GBL 文件）结尾。构建应用程序时，将生成 **\.s37** 和 GBL 文件。GBL 文件的确切格式取决于您选择的硬件。
 
-> 注意：使用 Gecko Bootloader 时，必须使用 Simplicity Commander 启用某些配置选项，例如安全功能。请参阅 UG266：Silicon Labs Gecko Bootloader User’s Guide。
+> 注意：使用 Gecko Bootloader 时，必须使用 Simplicity Commander 启用某些配置选项，例如安全功能。请参阅 **UG266：Silicon Labs Gecko Bootloader User’s Guide**。
 
 ### **5.3.2 构建和刷新文件(Building and Flashing Files)**
 
@@ -475,11 +475,11 @@ switch 控制台显示来自 light 示例应用程序的反馈。
 
 ![6 p2](../Pic/Getting%20Started%20with%20Silicon%20Labs%20Thread-6p2.jpg)
 
-light 和 switch 示例应用程序都包含 OTA Bootload Client 支持，这意味着它们通过 OTA Bootload Cluster 支持无线升级。light 和 switch 都将在网络上自动启动一次 OTA Bootload 操作。switch 搜索 OTA Bootload server，而 light 充当 OTA Bootload server 并响应发现查询。有关 ZCL/IP OTA 升级的更多信息，请参阅 UG278：Zigbee Cluster Library over IP (ZCL/IP) User’s Guide。
+light 和 switch 示例应用程序都包含 OTA Bootload Client 支持，这意味着它们通过 OTA Bootload Cluster 支持无线升级。light 和 switch 都将在网络上自动启动一次 OTA Bootload 操作。switch 搜索 OTA Bootload server，而 light 充当 OTA Bootload server 并响应发现查询。有关 ZCL/IP OTA 升级的更多信息，请参阅 **UG278：Zigbee Cluster Library over IP (ZCL/IP) User’s Guide**。
 
 ------------------------------------------------------------------------------------------------------------------------
 
-# 7. 使用网络分析仪(Using the Network Analyzer)
+# **7. 使用网络分析仪(Using the Network Analyzer)**
 
 现在您的网络正常运行，您可以使用网络分析仪工具评估传输的数据。
 
