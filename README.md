@@ -15,6 +15,6 @@
     * **Thread**
         * [QSG113: Silicon Labs Thread 入门](./Silicon%20Labs/EFR32MG/Thread/Getting%20Started%20with%20Silicon%20Labs%20Thread.md)
     * **Zigbee**
-        * [UG103.2: Zigbee 基本原理](./Silicon%20Labs/EFR32MG/ZigBee/Zigbee%20Fundamentals.md)
+        * [UG103.2: Zigbee 基本原理](./Silicon%20Labs/EFR32MG/Zigbee/Zigbee%20Fundamentals.md)
 
 # **Texas Instruments**
