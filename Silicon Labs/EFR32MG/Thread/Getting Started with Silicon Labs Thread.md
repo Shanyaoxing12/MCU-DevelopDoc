@@ -1,6 +1,6 @@
 # **Getting Started with Silicon Labs Thread** <!-- omit in toc -->
 
-该快速入门指南提供了使用 Silicon Labs Thread 协议栈（version 2.4 及更高版本）和 Simplicity Studio（version 4）为 Mighty Gecko（EFR32MG）系列 SoCs 配置，构建和安装应用程序的基本信息。
+该快速入门指南提供了使用 Silicon Labs Thread stack（version 2.4 及更高版本）和 Simplicity Studio（version 4）为 Mighty Gecko（EFR32MG）系列 SoCs 配置，构建和安装应用程序的基本信息。
 
 本指南适用于 Silicon Labs Thread 和 Silicon Labs 硬件开发的新手。它说明了如何开始使用 Silicon Labs Thread 协议栈提供的示例应用程序。
 
