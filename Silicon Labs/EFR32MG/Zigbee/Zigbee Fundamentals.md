@@ -53,6 +53,17 @@ Silicon Labs 的应用程序开发基本原理系列涵盖了项目经理，应�
         - [**5.4.1 用于 扫描/形成/加入 过程**](#541-用于-扫描形成加入-过程)
         - [**5.4.2 选择 EPID**](#542-选择-epid)
         - [**5.4.3 EPID 对比 PID**](#543-epid-对比-pid)
+- [**6. Zigbee 簇库**](#6-zigbee-簇库)
+    - [**6.1 概述**](#61-概述)
+    - [**6.2 簇内**](#62-簇内)
+        - [6.2.1 客户端和服务端](#621-客户端和服务端)
+        - [**6.2.2 属性**](#622-属性)
+        - [**6.2.3 命令**](#623-命令)
+            - [**全局命令**](#全局命令)
+            - [**簇特定命令**](#簇特定命令)
+    - [**6.3 示例: Temperature Measurement Sensor Cluster**](#63-示例-temperature-measurement-sensor-cluster)
+    - [**6.4 功能域**](#64-功能域)
+    - [**6.5 制造商扩展**](#65-制造商扩展)
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -506,6 +517,128 @@ Zigbee PRO 协议栈使用随机地址分配机制。在这种机制下，协调
 * EPID 作为唯一标识网络和解决 PID 冲突的准则；PID 用于无线接收器上的 MAC 目标过滤。
 * EPID 可以帮助在扫描结果中提供网络身份的一些指示；PID 应始终是完全随机的，因此在确定哪个 PAN 是 “正确的” 时不那么有用。
 * EPID 可以是 0x0000000000000001 到 0xFFFFFFFFFFFFFFFE 范围内的任何值（全 0 和全 F 都是保留值）；PID 可以是 0x0000 - 0xFFFE 范围内的任何值（全 F 为保留值）。
+
+------------------------------------------------------------------------------------------------------------------------
+
+# **6. Zigbee 簇库**
+
+## **6.1 概述**
+
+在 Zigbee 簇库（ZCL）中，簇（cluster）是一组用于通过 Zigbee 网络发送和接收相关命令和数据的消息。例如，温度簇将包含发送和接收温度信息所需的所有必要 OTA 消息。
+
+为了便于学习和管理，这些簇进一步分组到功能域里，例如对 HVAC，安全，照明等有用的功能域。如果预定义的簇不满足其特定的应用程序需求，开发人员也可以定义自己的簇。
+
+然后，Zigbee 公共应用层引用在某些应用程序中使用的簇，并指定不同设备支持哪些簇 - 某些簇是强制性的，其他簇是可选的。通过这种方式，ZCL 简化了特定应用程序的文档，并允许开发人员快速了解设备支持的行为。
+
+**Zigbee Cluster Library Specification** 文档（15-02017-002）中描述了更详细的 ZCL 概述、簇内消息的格式以及可在任何簇中使用的一组消息。功能域簇在单独的文档中描述，例如功能域：一般，安全性和安全性文档。
+
+Silicon Labs 提供了源代码，可以轻松地组装和拆解 ZCL 消息，无论它们是由 ZCL 预定义还是由开发人员创建的自定义消息。此外，Silicon Labs 提供了一个名为 AppBuilder 的强大工具，允许开发人员创建和配置他们的大多数基于 ZCL 的应用程序。有关更多信息，请参阅文档 **UG102： Application Framework Developer Guide**。
+
+## **6.2 簇内**
+
+### 6.2.1 客户端和服务端
+
+每个簇分为两个端，即客户端（client）和服务端（server）。簇的客户端发送的消息可能被服务端接收。客户端还可以接收服务端发送的消息。从这个意义上讲，簇的客户端和服务端始终是互补的。与许多其他系统（例如，HTTP）相比，两者都具有相同的发送和接收消息的潜力：“客户端” 指定并不意味着从属或仅响应状态。
+
+由于所有命令都有发送方和接收方，因此每个簇分为两部分 - 服务端部分和客户端部分，如下图所示。支持簇服务端的设备将与支持同一簇的客户端的设备通信。
+
+![Figure 6.1. A Zigbee Cluster](../Pic/Zigbee%20Fundamentals-F6.1.jpg)
+
+这种平等使讨论复杂化；为清楚起见，当必须使用客户端或服务端之一时，本文档总使用 “簇端”，当谈到客户端和服务端两个时，使用 “两簇端”，以及需要特定的端（通常是例子）时，使用 “簇服务端” 或 “簇客户端”。
+
+### **6.2.2 属性**
+
+属性（attribute）是与簇端相关联的数据；簇的服务端和客户端可以各自拥有多个属性。
+
+每个属性声明一个 16 位标识符，一个数据类型，一个只读或 读/写 指示符，一个默认值，以及一个任何实现的支持是强制还是可选的指示符。下表列出了示例数据类型。
+
+![Table 6.1. Data Type Quick Reference (Example Data Types)](../Pic/Zigbee%20Fundamentals-T6.1.jpg)
+
+属性标识符仅在特定簇端内是唯一的：这意味着簇服务端中的属性 0x0002 不需要与簇客户端中的属性 0x0002 相同，即使在同一簇中也是如此。
+
+ZCL 规范中详细描述了数据类型。下表是该文档的摘录。
+
+![Table 6.2. Example ZCL Data Types](../Pic/Zigbee%20Fundamentals-T6.2.jpg)
+
+![Table 6.2. Example ZCL Data Types](../Pic/Zigbee%20Fundamentals-T6.2c.jpg)
+
+可以通过使用本文档后面描述的属性命令来无线访问属性。
+
+在 ZCL 的第 6 版中引入了全局属性（Global attributes）。这些属性是为设备上的每个簇实例定义的，并且充当普通的 ZCL 属性。Cluster Revision（属性 ID 0xFFFD）是全局属性的一个示例。此属性是对每个单独的簇规范进行版本化，以提高向后兼容性和允许测试特定版本化簇行为的方法。一个设备可以读取另一个设备上的 Cluster Revision 属性，以确定如何通过无线方式向他们传达某些簇行为。对于每个簇的规范的每次主要更改，都会增加此 Cluster Revision 属性。
+
+### **6.2.3 命令**
+
+命令（command）由一个 8 位命令标识符和一个有效载荷格式组成。与属性类似，8 位标识符仅在特定簇端内是唯一的。有效载荷格式对于命令类型是任意的，仅遵循 ZCL 规范中描述的一般数据包格式指南。
+
+命令分为两种类型：全局和簇特定。全局命令在 ZCL 规范中定义，并不特定于任何簇。这些全局命令最初称为 Profile-Wide，但已更改名称以符合 Zigbee 3.0 通用应用层。簇特定命令在 ZCL 功能域文档中的簇定义中定义，并且在定义它们的簇中是唯一的。
+
+#### **全局命令**
+
+全局命令不是簇特定的唯一命令；它们在 ZCL 一般命令帧中定义（参见 ZCL Specification 075123r02, Chapter 7）。下表列出了示例 profile-wide 命令：
+
+![Table 6.3. Example Profile Wide Commands](../Pic/Zigbee%20Fundamentals-T6.3.jpg)
+
+* Read Attributes：请求接收者返回一个或多个属性；回复 Read Attributes Response。
+* Write Attributes：为接收者的一个或多个属性提供新值；回复将包含一个 Write Attributes Response 部分，以指示哪些属性已成功更新，和/或 包含一个未成功更新属性的 Write Attributes No Response 部分。
+* Write Attributes Undivided：使用 Write Attributes Response 更新所有属性和回复；如果无法更新任何单个属性，则不会更新任何属性，并且此命令将回复 Write Attributes No Response。
+* Configure Reporting：配置报告间隔，触发事件和指示属性的目标。回复 Configure Reporting Response。
+* Read Reporting Configuration：生成一个 Read Reporting Configuration Response，其中包含作为回复发送的当前报告配置。
+* Discover Attributes：请求发送所有支持的属性；使用一个 Discover Attributes Response 回复。
+* Report Attributes：通过 Configure Reporting 命令配置的属性值的报告。
+* Default Response：当没有更多特定响应可用时发送的响应（并且传入消息未禁用默认响应）。
+
+由于属性始终束缚于簇，因此影响属性的命令要指定要访问或修改的哪些簇和哪些属性。此外，每个簇定义哪些属性支持哪些命令 - 例如，属性可以被声明为 READ ONLY，在这种情况下，它将不支持 Write Attributes 命令。因此，虽然命令格式不是簇特定的，但它描述的属性及其在接收系统上的结果都是簇特定的。
+
+有兴趣了解有关这些消息的格式或特定行为的更多详细信息的读者应查看ZCL规范（075123r02）。
+
+#### **簇特定命令**
+
+有效载荷格式，支持要求（强制，可选）和接收簇特定命令的行为都在簇定义中定义。通常，这些命令会影响接收设备的状态，并可能作为副作用更改簇的属性。
+
+例如，ZCL 定义了 On/Off 簇服务端接收的三个命令（OFF，ON 和 TOGGLE）。它进一步声明这些命令中的每一个都是强制的，以及每个命令的有效载荷格式（在本例中，它们都没有有效载荷）。ZCL 定义 On/Off 簇客户端负责生成服务端接收的命令。
+
+## **6.3 示例: Temperature Measurement Sensor Cluster**
+
+例如，考虑 Temperature Measurement Sensor cluster 的一部分，该部分在 **Zigbee Cluster Library Specification**（15-02017-002）的第 4 章中有详细描述。
+
+下表列出了 ZCL 规范中的一些属性。
+
+![Table 6.4. Temperature Measurement Sensor Server Attributes (incomplete)](../Pic/Zigbee%20Fundamentals-T6.4.jpg)
+
+1. 属性概述：该簇服务端至少支持这五个属性，其中四个必须由任何实现（MeasuredValue，MinMeasuredValue，MaxMeasuredValue 和 ClusterRevision）支持，其中一个可以选择支持（Tolerance）。所有这些属性都是只读的，表明对它们的任何写入尝试都将失败。请注意，ClusterRevision 全局属性是一个常规属性。
+2. 簇服务端和簇客户端的含义：显然，簇服务端应该由包含温度传感器的设备实现。同时，簇客户端应由希望主动（通过读取属性命令）或被动地（通过首先配置报告属性命令，然后从报告属性）接收温度传感器信息的任何设备实现。
+3. 更多信息：簇描述还提供有关数据实际格式的有用信息（例如，MaxMeasuredValue 的带符号 16 位整数的范围）和强制支持的操作 - 并非所有属性都支持所有基本命令。例如，MaxMeasuredValue 是只读命令，无法写入。
+    > Note：虽然支持传入写入属性命令，但在这种情况下，MaxMeasuredValue 始终生成 Write Attributes No Response 回复。
+4. 命令：此簇（服务端或客户端）不支持自定义命令。有关包含自定义命令的簇的示例，请参阅 ZCL（15-02017-002）中的 Thermostat Cluster。
+
+## **6.4 功能域**
+
+在撰写本文时，Zigbee Cluster Library 定义了以下功能域：
+* 一般(General)
+* 封闭(Closures)
+* 暖通空调(HVAC)
+* 照明(Lighting)
+* 测量&传感(Measurement & Sensing)
+* 安全&保障(Security & Safety)
+* 协议接口(Protocol Interfaces)
+* 智慧能源(Smart Energy)
+* 无线升级(Over-the-Air Upgrading)
+* 电信(Telecommunications)
+* 试运行(Commissioning)
+* 零售(Retail)
+* 电器(Appliances)
+
+每个域定义了许多簇，然后 Zigbee 应用层使用这些簇来描述设备的 OTA 行为（请参见下图）。
+
+![Figure 6.2. Cluster Library Functional Domains](../Pic/Zigbee%20Fundamentals-F6.2.jpg)
+
+## **6.5 制造商扩展**
+
+ZCL 允许以两种方式扩展现有库：用户可以向现有簇添加制造商特定的命令或属性，或者他们可以定义制造商特定的全新簇。
+
+通过在 ZCL 头中设置特殊位和包含制造商代码（从 Zigbee 联盟领到的）来识别制造商特定的命令。这可以保证制造商特定的扩展不会干扰其他制造商特定的扩展或现有的 ZCL 簇，命令或属性。
+
+制造商特定的簇必须使用范围为 0xFC00-0xFFFE 的簇 ID。
 
 ------------------------------------------------------------------------------------------------------------------------
 
