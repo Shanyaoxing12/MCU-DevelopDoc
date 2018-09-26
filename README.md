@@ -12,10 +12,12 @@
 # **Silicon Labs**
 
 * **EFR32MG**
+    * **General**
+        * [UG103.1：无线应用开发基础](./Silicon%20Labs/EFR32MG/General/Wireless%20Networking%20Application%20Development%20Fundamentals.md)
+        * [UG103.3：应用程序开发基础：设计选择](./Silicon%20Labs/EFR32MG/General/Application%20Development%20Fundamentals-Design%20Choices.md)
     * **Thread**
         * [QSG113：Silicon Labs Thread 入门](./Silicon%20Labs/EFR32MG/Thread/Getting%20Started%20with%20Silicon%20Labs%20Thread.md)
     * **Zigbee**
-        * [UG103.1：无线应用开发基础](./Silicon%20Labs/EFR32MG/Zigbee/Wireless%20Networking%20Application%20Development%20Fundamentals.md)
         * [UG103.2：Zigbee 基础](./Silicon%20Labs/EFR32MG/Zigbee/Zigbee%20Fundamentals.md)
 
 # **Texas Instruments**
